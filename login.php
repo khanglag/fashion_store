@@ -67,6 +67,7 @@ if (isset($_POST['login'])) {
             </div>
             <div class="form-group">
                 <a id="register-url" class="btn-text" href="register.php">Don't have account? Register</a>
+                <a id="forget-password" class= "btn-text" href="forgot_password.php">Forgot  password</a>
             </div>
         </form>
     </div>
