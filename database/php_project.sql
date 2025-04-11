@@ -229,16 +229,21 @@ CREATE TABLE `users` (
   `user_id` int(11) NOT NULL,
   `user_name` varchar(108) NOT NULL,
   `user_email` varchar(100) NOT NULL,
-  `user_password` varchar(100) NOT NULL
+  `user_password` varchar(100) NOT NULL,
+  `reset_code` varchar(255) DEFAULT NULL,
+  `reset_expiry` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `users`
 --
 
-INSERT INTO `users` (`user_id`, `user_name`, `user_email`, `user_password`) VALUES
-(1, 'cuonq', 'kecuong71@gmail1.com', '123'),
-(6, 'kecuong71@gmail.com', 'kecuong71@gmail.com', 'e10adc3949ba59abbe56e057f20f883e');
+INSERT INTO `users` (`user_id`, `user_name`, `user_email`, `user_password`, `reset_code`, `reset_expiry`) VALUES
+(1, 'cuonq', 'kecuong71@gmail1.com', '123', NULL, NULL),
+(6, 'kecuong71@gmail.com', 'kecuong71@gmail.com', 'e10adc3949ba59abbe56e057f20f883e', NULL, NULL),
+(7, 'lag', 'khangminh.do2003@gmail.com', 'e10adc3949ba59abbe56e057f20f883e', NULL, NULL),
+(8, 'cuong', 'khangdo0107@gmail.com', 'e10adc3949ba59abbe56e057f20f883e', NULL, NULL);
+
 
 --
 -- Chỉ mục cho các bảng đã đổ
