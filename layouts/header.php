@@ -422,50 +422,49 @@ if (isset($_GET['logout'])) {
             <tr>
                 <td>
                     <div class="product-info">
-                        <img src="./assets/images/<?php echo $value['product_image']; ?>"
-                            alt="<?php echo $value['product_name']; ?>">
+                        <img src="./assets/images/<?php echo htmlspecialchars($value['product_image']); ?>"
+                            alt="<?php echo htmlspecialchars($value['product_name']); ?>">
                         <div>
-                            <p class="pt-4"><?php echo $value['product_name']; ?></p>
+                            <p class="pt-4"><?php echo htmlspecialchars($value['product_name']); ?></p>
                         </div>
-
                     </div>
                 </td>
-
                 <td>
                     <div>
                         <p class="pt-4">
                             <?php 
-                                if ($value['product_size'] == 1) {
-                                    echo "S";
-                                } elseif ($value['product_size'] == 2) {
-                                    echo "M";
-                                } elseif ($value['product_size'] == 3) {
-                                    echo "L";
-                                } elseif ($value['product_size'] == 4) {
-                                    echo "XL";
-                                } else {
-                                    echo "Pre Size"; // Giá trị mặc định nếu không khớp
-                                }
-                                ?>
+                            switch ($value['product_size']) {
+                                case 1: echo "S"; break;
+                                case 2: echo "M"; break;
+                                case 3: echo "L"; break;
+                                case 4: echo "XL"; break;
+                                default: echo "Pre Size";
+                            }
+                            ?>
                         </p>
                     </div>
                 </td>
-                <td><?php echo $value['product_quantity']; ?></td>
-                <td><?php echo $value['product_price']; ?></td>
-                <td><?php echo number_format($_SESSION['total'], 3, '.', '.') . ' VND'; ?> </td>
+                <td><?php echo (int)$value['product_quantity']; ?></td>
+                <td><?php echo number_format((float)$value['product_price'] , 0, ',', '.') . ' VND'; ?></td>
+
+                <td>
+                    <?php
+                    $line_total = (float)$value['product_price'] * (int)$value['product_quantity']; 
+                    echo number_format($line_total, 0, ',', '.') . ' VND';
+                    ?>
+                </td>
             </tr>
             <?php } ?>
 
             <tr>
                 <td colspan="4">Total</td>
-                <td><?php echo number_format($_SESSION['total'], 3, '.', '.') . ' VND'; ?></td>
+                <td><?php echo number_format((float)$_SESSION['total'], 0, ',', '.') . ' VND'; ?></td>
             </tr>
         </table>
         <a href="checkout.php" class="btn btn-dark">Proceed to Checkout</a>
         <a href="cart.php" class="btn btn-dark">Show Full</a>
         <?php } else { ?>
         <div class="empty-cart">
-            <!-- Hình ảnh giỏ hàng trống -->
             <img src="./assets/images/empty-cart.png" alt="Giỏ hàng trống"
                 style="max-width: 300px; display: block; margin: 0 auto;">
             <p>Your cart is empty.</p>
@@ -474,6 +473,9 @@ if (isset($_GET['logout'])) {
         <?php } ?>
     </div>
 </div>
+
+
+
 
 
 

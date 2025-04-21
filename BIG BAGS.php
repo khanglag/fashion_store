@@ -2,14 +2,14 @@
 include('server/connection.php');
 
 // Thiết lập số lượng sản phẩm hiển thị trên mỗi trang
-$products_per_page = 8;
+$products_per_page = 9;
 
 // Kiểm tra trang hiện tại, mặc định là trang 1 nếu không có trang nào được chọn
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
 $start_from = ($page - 1) * $products_per_page;
 
 // Danh sách các danh mục cần truy vấn
-$categories = ['TOPS/SWEATERS & CARDIGANS'];
+$categories = ['BAGS/BIG BAGS'];
 
 // Kiểm tra nếu có yêu cầu tìm kiếm từ người dùng
 if (isset($_POST['search'])) {
@@ -77,6 +77,7 @@ if (isset($_POST['search'])) {
     $stmt->execute();
     $products = $stmt->get_result();
 }
+// Truy vấn lấy sản phẩm thuộc các category_id = 1, 6, 7, 8, 9, 10 và trạng thái sản phẩm từ cơ sở dữ liệu
 $stmt = $conn->prepare("
 SELECT 
     products.product_id, 
@@ -89,7 +90,7 @@ SELECT
 FROM products
 LEFT JOIN status_products 
 ON products.status_products_id = status_products.status_products_id
-WHERE products.category_id = 8
+WHERE products.category_id = 20
 LIMIT ? OFFSET ?
 ");
 $stmt->bind_param('ii', $products_per_page, $start_from); // Đảm bảo đã khai báo các biến $products_per_page và $start_from
@@ -107,30 +108,21 @@ $total_pages = ceil($total_products / $products_per_page); // Tổng số trang 
 
             // Chuyển hướng dựa trên giá trị danh mục đã chọn
             switch($category) {
-                case 'T-SHIRTS':
-                    header('Location: T-SHIRTS.php');
+                case 'MINI BAGS':
+                    header('Location: MINI BAGS.php');
                     exit();
-                case 'SHIRTS':
-                    header('Location: SHIRTS.php');
-                    exit();
-                case 'SWEATERS & CARDIGANS':
-                    header('Location: SWEATERS & CARDIGANS.php');
-                    exit();
-                case 'SWEATSHIRTS & HOODIES':
-                    header('Location: SWEATSHIRTS & HOODIES.php');
-                    exit();
-                case 'OUTERWEARS':
-                    header('Location: OUTERWEARS.php');
+                case 'BIG BAGS':
+                    header('Location: BIG BAGS.php');
                     exit();
                 default:
-                    break;
+                break;
             }
         }
     }
     ?>
 
 <?php include('layouts/header.php') ?>
-                      
+      
                 <div class="container">
     <div class="row">
         
@@ -138,18 +130,18 @@ $total_pages = ceil($total_products / $products_per_page); // Tổng số trang 
         <div class="col-lg-3 col-md-4 col-sm-12">
             <section id="search" class="my-5 py-5 ms-2">
                 <div class="container mt-5 py-5">
-                        <!-- Breadcrumb -->
-                <nav aria-label="breadcrumb">
+              <!-- Breadcrumb -->
+              <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="index.php">HOME</a></li>
-                <li class="breadcrumb-item"><a href="TOPS.php">TOPS</a></li>
-                <li class="breadcrumb-item active" aria-current="page">SWEATERS & CARDIGANS</li>
+                <li class="breadcrumb-item"><a href="BAGS.php">BAGS</a></li>
+                <li class="breadcrumb-item active" aria-current="page">BIGBAGS</li>
                 </ol>
                 </nav>
                     <p class="text-uppercase fs-3">Search Product</p>
                     <hr class="mx-auto">
                 </div>
-                <form action="SWEATERS & CARDIGANS.php" method="POST">
+                <form action="BIG BAGS.php" method="POST">
                     <div class="row mx-auto container">
                         <div class="row">
                             <!-- Category Section -->
@@ -157,31 +149,17 @@ $total_pages = ceil($total_products / $products_per_page); // Tổng số trang 
                                 <p class="text-uppercase fw-bold">Category</p>
 
                                 <div class="form-check">
-                                    <input type="radio" value="T-SHIRTS" class="form-check-input" name="category"
+                                    <input type="radio" value="MINI BAGS" class="form-check-input" name="category"
                                         id="category_one">
-                                    <label class="form-check-label" for="category_one">T-SHIRTS</label>
+                                    <label class="form-check-label" for="category_one">MINI BAGS</label>
                                 </div>
                                 <div class="form-check">
-                                    <input type="radio" value="SHIRTS" class="form-check-input" name="category"
+                                    <input type="radio" value="BIG BAGS" class="form-check-input" name="category"
                                         id="category_two">
-                                    <label class="form-check-label" for="category_two">SHIRTS</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" value="SWEATERS & CARDIGANS" class="form-check-input" name="category"
-                                        id="category_three">
-                                    <label class="form-check-label" for="category_three">SWEATERS & CARDIGANS</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" value="SWEATSHIRTS & HOODIES" class="form-check-input" name="category"
-                                        id="category_four">
-                                    <label class="form-check-label" for="category_four">SWEATSHIRTS & HOODIES</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" value="OUTERWEARS" class="form-check-input" name="category"
-                                        id="category_four">
-                                    <label class="form-check-label" for="category_four">OUTERWEARS</label>
+                                    <label class="form-check-label" for="category_two">BIG BAGS</label>
                                 </div>
                             </div>
+
 
                             <!-- Price Section -->
                             <div class="col-lg-12">
@@ -215,7 +193,7 @@ $total_pages = ceil($total_products / $products_per_page); // Tổng số trang 
         <div class="col-lg-9 col-md-8 col-sm-12">
             <section id="products" class="my-5 py-5">
             <div class="container text-center mt-5 py-5">
-                    <h3 class="text-uppercase fs-3">SWEATERS & CARDIGANS</h3>
+                    <h3 class="text-uppercase fs-3">BIG BAGS</h3>
                     <hr class="mx-auto">
                 </div>
                 <div class="row">
@@ -271,15 +249,15 @@ $total_pages = ceil($total_products / $products_per_page); // Tổng số trang 
                 <nav aria-label="Page navigation example">
                     <ul class="container text-center pagination mt-5">
                         <?php if ($page > 1) : ?>
-                        <li class="page-item"><a href="TOPS.php?page=<?php echo $page - 1; ?>"
+                        <li class="page-item"><a href="BAGS.php?page=<?php echo $page - 1; ?>"
                                 class="page-link"> << </a></li>
                         <?php endif; ?>
                         <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
                         <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>"><a
-                                href="TOPS.php?page=<?php echo $i; ?>" class="page-link"><?php echo $i; ?></a></li>
+                                href="BAGS.php?page=<?php echo $i; ?>" class="page-link"><?php echo $i; ?></a></li>
                         <?php endfor; ?>
                         <?php if ($page < $total_pages) : ?>
-                        <li class="page-item"><a href="TOPS.php?page=<?php echo $page + 1; ?>"
+                        <li class="page-item"><a href="BAGS.php?page=<?php echo $page + 1; ?>"
                                 class="page-link"> >> </a></li>
                         <?php endif; ?>
                     </ul>

@@ -85,7 +85,7 @@ if (isset($_POST['create_product'])) {
 
     // Ràng buộc tham số với kiểu dữ liệu phù hợp
     $stmt->bind_param(
-        "siisssssddd",  // Kiểu dữ liệu của các tham số: s = string, i = integer, d = double
+        "siisssssddsi",  // Kiểu dữ liệu của các tham số: s = string, i = integer, d = double
         $product_name,     // product_name: chuỗi (string)
         $product_category, // category_id: số nguyên (integer)
         $product_status,    

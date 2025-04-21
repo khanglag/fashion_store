@@ -16,7 +16,7 @@ session_start();
     <div class="container text-center mx-auto">
 
         <h2 class="text-center">Total:
-            <strong><?php echo number_format($_SESSION['total'], 3, '.', '.') . ' VND'; ?>
+            <strong><?php echo number_format($_SESSION['total'], 0, ',', '.') . ' VND'; ?>
             </strong>
         </h2>
         <h2 class="text-center pt-4"><?php if (isset($_GET['order_status'])) {

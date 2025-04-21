@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 include("server/connection.php");
 
 // if (isset($_GET['product_id'])) {
@@ -23,7 +23,6 @@ include("server/connection.php");
 // }
 
 
-include("server/connection.php");
 
 if (isset($_GET['product_id'])) {
     $product_id = $_GET['product_id'];

@@ -2,7 +2,7 @@
 include('server/connection.php');
 
 // Thiết lập số lượng sản phẩm hiển thị trên mỗi trang
-$products_per_page = 9;
+$products_per_page = 8;
 
 // Kiểm tra trang hiện tại, mặc định là trang 1 nếu không có trang nào được chọn
 $page = isset($_GET['page']) ? $_GET['page'] : 1;
