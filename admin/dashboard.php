@@ -8,12 +8,6 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     exit;
 }
 
-
-
-
-
-
-
 include('../admin/layouts/app.php');
 
 // Kết nối cơ sở dữ liệu với mysqli
@@ -51,18 +45,17 @@ $resultMonthlySales = mysqli_query($conn, "
     GROUP BY MONTH(order_date)
     ORDER BY MONTH(order_date)
 ");
-if (!$resultMonthlySales) {
-    die('Query Error: ' . mysqli_error($conn));
-}
 
-$months = [];
-$salesData = [];
+
+$allMonths = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+$salesData = array_fill(0, 12, 0); 
+
 while ($row = mysqli_fetch_assoc($resultMonthlySales)) {
-    $months[] = date('F', mktime(0, 0, 0, $row['month'], 10)); // Lấy tên tháng từ số tháng
-    $salesData[] = $row['sales'];
+    $salesData[$row['month'] - 1] = $row['sales']; 
 }
 
-mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
+mysqli_close($conn); 
 ?>
 
 <!-- Content Wrapper. Contains page content -->
@@ -77,7 +70,6 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
                 <div class="col-sm-6"></div>
             </div>
         </div>
-        <!-- /.container-fluid -->
     </section>
     <!-- Main content -->
     <section class="content">
@@ -93,7 +85,7 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
                         <div class="icon">
                             <i class="ion ion-bag"></i>
                         </div>
-                        <a href="#" class="small-box-footer text-dark">More info <i
+                        <a href="admin/list_orders.php" class="small-box-footer text-dark">More info <i
                                 class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
@@ -107,7 +99,7 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
                         <div class="icon">
                             <i class="ion ion-stats-bars"></i>
                         </div>
-                        <a href="#" class="small-box-footer text-dark">More info <i
+                        <a href="list_users.php" class="small-box-footer text-dark">More info <i
                                 class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
@@ -115,14 +107,14 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
                 <div class="col-lg-4 col-6">
                     <div class="small-box card">
                         <div class="inner">
-                            <h3><?php echo number_format($totalSales, 3);
-                                ?> VND</h3>
+                            <h3><?php echo number_format($totalSales, 3, '.', '.') ; ?> VND</h3>
                             <p>Total Sale</p>
                         </div>
                         <div class="icon">
-                            <i class="ion ion-person-add"></i>
+                            <i class="ion ion-stats-bars"></i>
                         </div>
-                        <a href="javascript:void(0);" class="small-box-footer">&nbsp;</a>
+                        <a href="top_customers.php" class="small-box-footer text-dark">More info <i
+                                class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
             </div>
@@ -138,10 +130,9 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
                 </div>
             </div>
         </div>
-        <!-- /.card -->
     </section>
-    <!-- /.content -->
 </div>
+
 <?php include('../admin/layouts/sidebar.php') ?>
 
 <!-- Include Chart.js -->
@@ -149,10 +140,10 @@ mysqli_close($conn); // Đóng kết nối sau khi truy vấn xong
 <script>
     // Dữ liệu cho biểu đồ
     const data = {
-        labels: <?php echo json_encode($months); ?>, // Nhãn tháng
+        labels: <?php echo json_encode($allMonths); ?>, 
         datasets: [{
             label: 'Total Sales',
-            data: <?php echo json_encode($salesData); ?>, // Dữ liệu doanh thu
+            data: <?php echo json_encode($salesData); ?>, // Dữ liệu doanh thu cho tất cả 12 tháng
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderColor: 'rgba(75, 192, 192, 1)',
             borderWidth: 1

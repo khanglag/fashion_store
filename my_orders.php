@@ -89,19 +89,27 @@ if (isset($_SESSION['logged_in'])) {
                     <?php while ($row = $orders->fetch_assoc()) { ?>
                         <tr class="text-uppercase font-weight">
                             <td><?php echo $row['order_id']; ?></td>
-                            <td><?php echo $row['order_cost']; ?> VND</td>
+                            <td><?php echo number_format( $row['order_cost'], 3, '.', '.') . ' VND'; ?></td>
                             <td><?php echo $row['product_quantity']; ?></td>
                             <td>
                                 <?php
                                     $status = $row['order_status'];
-                                    $statusClass = 'bg-danger'; // Mặc định là màu đỏ cho "pending"
-                                    if ($status === 'shipped') {
-                                        $statusClass = 'bg-warning'; // Màu cam cho "shipped"
-                                    } elseif ($status === 'delivered') {
-                                        $statusClass = 'bg-success'; // Màu xanh cho "delivered"
-                                    } elseif ($status === 'cancelled') {
-                                        $statusClass = 'bg-primary'; // Màu xanh dương cho "cancelled"
-                                    }
+                                    $statusClass = '';
+
+                                        switch ($row['order_status']) {
+                                            case 'pending':
+                                                $statusClass = 'bg-warning'; 
+                                                break;
+                                            case 'confirmed':
+                                                $statusClass = 'bg-info'; 
+                                                break;
+                                            case 'delivered':
+                                                $statusClass = 'bg-success';
+                                                break;
+                                            case 'cancelled':
+                                                $statusClass = 'bg-danger'; 
+                                                break;
+                                        }
                                 ?>
                                 <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">
                                     <?php echo htmlspecialchars($status); ?>

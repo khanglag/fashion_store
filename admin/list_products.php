@@ -45,7 +45,7 @@ $total_results = $conn->query('SELECT COUNT(*) as count FROM products')->fetch_a
 $total_pages = ceil($total_results / $limit);
 
 // Kiểm tra và cập nhật trạng thái của sản phẩm nếu số lượng = 0
-$checkZeroQuantitySql = "UPDATE products SET status_products_id = 6 WHERE quantity = 0";
+$checkZeroQuantitySql = "UPDATE products SET status_products_id = 4 WHERE quantity = 0";
 $conn->query($checkZeroQuantitySql); // Cập nhật trạng thái sản phẩm hết hàng (status_products_id = 6)
 
 ?>

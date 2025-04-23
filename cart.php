@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 function calculateTotalCart() {
     $total = 0;
@@ -10,46 +11,44 @@ function calculateTotalCart() {
     $_SESSION['total'] = $total;
 }
 
-// Nếu chưa đăng nhập
-if (!isset($_SESSION['user_id'])) {
-    if (isset($_POST['add_to_cart'])) {
+// Xử lý thêm sản phẩm vào giỏ hàng
+if (isset($_POST['add_to_cart'])) {
+    // Nếu chưa đăng nhập => lưu sản phẩm và chuyển hướng login
+    if (!isset($_SESSION['user_id'])) {
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = [];
         }
 
         $product_array = array(
-            'product_id' => (int)$_POST['product_id'],
+            'product_id' => $_POST['product_id'],
             'product_name' => htmlspecialchars($_POST['product_name']),
             'product_size' => $_POST['product_size'],
             'product_image' => htmlspecialchars($_POST['product_image']),
-            'product_price' => (float)$_POST['product_price'] , 
+            'product_price' => (float)$_POST['product_price'],
             'product_quantity' => (int)$_POST['product_quantity']
         );
 
         $_SESSION['cart'][$_POST['product_id']] = $product_array;
         calculateTotalCart();
+
+        header("Location: login.php");
+        exit();
     }
 
-    header("Location: login.php");
-    exit();
-}
-
-// Nếu đã đăng nhập
-if (isset($_POST['add_to_cart'])) {
+    // Đã đăng nhập thì xử lý bình thường
     if (!isset($_SESSION['cart'])) {
         $_SESSION['cart'] = [];
     }
 
     $product_id = (int)$_POST['product_id'];
 
-    // Kiểm tra nếu sản phẩm chưa có trong giỏ hàng
     if (!array_key_exists($product_id, $_SESSION['cart'])) {
         $product_array = array(
             'product_id' => $product_id,
             'product_name' => htmlspecialchars($_POST['product_name']),
             'product_size' => $_POST['product_size'],
             'product_image' => htmlspecialchars($_POST['product_image']),
-            'product_price' => (float)$_POST['product_price'] ,
+            'product_price' => (float)$_POST['product_price'],
             'product_quantity' => (int)$_POST['product_quantity']
         );
         $_SESSION['cart'][$product_id] = $product_array;
@@ -60,7 +59,7 @@ if (isset($_POST['add_to_cart'])) {
     calculateTotalCart();
 }
 
-// Xử lý cập nhật số lượng
+// Cập nhật số lượng
 if (isset($_POST['update_quantity'])) {
     $product_id = (int)$_POST['product_id'];
     $product_quantity = (int)$_POST['product_quantity'];
@@ -71,7 +70,7 @@ if (isset($_POST['update_quantity'])) {
     calculateTotalCart();
 }
 
-// Xử lý xoá sản phẩm
+// Xoá sản phẩm
 if (isset($_POST['remove_product'])) {
     $product_id = (int)$_POST['product_id'];
     unset($_SESSION['cart'][$product_id]);
@@ -133,24 +132,19 @@ if (isset($_POST['remove_product'])) {
                             <button type="submit" name="update_quantity" class="remove-btn rounded-2">Update</button>
                         </form>
                     </td>
-
-                    <!-- Hiển thị giá đã nhân 1000 -->
                     <td>
-                        <p><?php echo number_format((float)$item['product_price'], 0, ',', '.') . ' VND'; ?></p>
+                        <p><?php echo number_format((float)$item['product_price'], 3, '.', '.') . ' VND'; ?></p>
                     </td>
-
                     <td>
                         <form action="cart.php" method="POST">
                             <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
                             <button type="submit" name="remove_product" class="remove-btn rounded-2">Remove</button>
                         </form>
                     </td>
-
-                    <!-- Tính tổng tiền từng sản phẩm -->
                     <td>
                         <?php
-                        $line_total = (float)$item['product_price'] * (int)$item['product_quantity']; 
-                        echo number_format($line_total, 0, ',', '.') . ' VND';
+                        $line_total = (float)$item['product_price'] * (int)$item['product_quantity'];
+                        echo number_format($line_total, 3, '.', '.') . ' VND';
                         ?>
                     </td>
                 </tr>
@@ -163,11 +157,11 @@ if (isset($_POST['remove_product'])) {
     </table>
 
     <?php if (!empty($_SESSION['cart'])): ?>
-        <div class="cart-total">
+        <div class="cart-total" style="font-weight: bold;">
             <table>
-                <tr>
+                <tr >
                     <td>Total</td>
-                    <td><?php echo number_format((float)$_SESSION['total'], 0, ',', '.') . ' VND'; ?></td>
+                    <td><?php echo number_format((float)$_SESSION['total'], 3, '.', '.') . ' VND'; ?></td>
                 </tr>
             </table>
         </div>

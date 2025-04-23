@@ -1,24 +1,43 @@
 <?php
 session_start();
-// Kết nối đến cơ sở dữ liệu
 include('../server/connection.php');
-// Biến để lưu thông báo sau khi xoá
 
-// Kiểm tra nếu người dùng gửi yêu cầu POST để xoá tất cả đơn hàng
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Xoá tất cả các bản ghi trong bảng orders
-    $stmt = $conn->prepare('DELETE FROM orders');
-    $stmt->execute();
+// Lấy các tham số lọc từ GET
+$status_filter = isset($_GET['status']) ? $_GET['status'] : '';
+$start_date = isset($_GET['start_date']) ? $_GET['start_date'] : '';
+$end_date = isset($_GET['end_date']) ? $_GET['end_date'] : '';
+$user_address = isset($_GET['user_address']) ? $_GET['user_address'] : '';
 
-    // Kiểm tra kết quả và gửi thông báo
-    if ($stmt->affected_rows > 0) {
-        // Nếu thành công, chuyển hướng về trang với thông báo thành công
-        header("Location: list_orders.php?message=All orders have been deleted.");
-    } else {
-        // Nếu không có đơn hàng nào để xoá
-        header("Location: delete_orders.php?message=No orders found to delete.");
-    }
-    exit;
+// Xây dựng phần điều kiện WHERE
+$where_conditions = [];
+$bindings = [];
+
+if ($status_filter) {
+    $where_conditions[] = "orders.order_status = ?";
+    $bindings[] = $status_filter;
+}
+
+if ($start_date && $end_date) {
+    $where_conditions[] = "orders.order_date BETWEEN ? AND ?";
+    $bindings[] = $start_date;
+    $bindings[] = $end_date;
+} elseif ($start_date) {
+    $where_conditions[] = "orders.order_date >= ?";
+    $bindings[] = $start_date;
+} elseif ($end_date) {
+    $where_conditions[] = "orders.order_date <= ?";
+    $bindings[] = $end_date;
+}
+
+if ($user_address) {
+    $where_conditions[] = "orders.user_address LIKE ?";
+    $bindings[] = "%" . $user_address . "%";
+}
+
+// Xây dựng câu truy vấn với điều kiện WHERE nếu có
+$where_sql = '';
+if (count($where_conditions) > 0) {
+    $where_sql = 'WHERE ' . implode(' AND ', $where_conditions);
 }
 
 // Xác định số bản ghi trên mỗi trang
@@ -30,20 +49,25 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 // Tính toán vị trí bắt đầu của bản ghi trong câu truy vấn
 $offset = ($page - 1) * $limit;
 
-// Truy vấn lấy đơn hàng kết hợp với thông tin người dùng, có phân trang
+// Cập nhật câu truy vấn SQL
 $stmt = $conn->prepare('
-    SELECT orders.*, users.user_name, users.user_email 
+    SELECT orders.*, users.user_name, users.user_email
     FROM orders 
     INNER JOIN users ON orders.user_id = users.user_id
+    ' . $where_sql . '
     ORDER BY orders.order_id DESC
     LIMIT ?, ?
 ');
-$stmt->bind_param("ii", $offset, $limit);
+
+$types = str_repeat('s', count($bindings)) . 'ii';
+$bindings[] = $offset;
+$bindings[] = $limit;
+$stmt->bind_param($types, ...$bindings);
 $stmt->execute();
 $orders = $stmt->get_result();
 
 // Truy vấn lấy tổng số đơn hàng để tính toán số trang
-$stmt_total = $conn->prepare('SELECT COUNT(*) AS total FROM orders');
+$stmt_total = $conn->prepare('SELECT COUNT(*) AS total FROM orders ' . $where_sql);
 $stmt_total->execute();
 $total_result = $stmt_total->get_result();
 $total_row = $total_result->fetch_assoc();
@@ -53,12 +77,9 @@ $total_orders = $total_row['total'];
 $total_pages = ceil($total_orders / $limit);
 ?>
 
-
-
-
 <?php include('../admin/layouts/app.php') ?>
+
 <div class="content-wrapper">
-    <!-- Content Header (Page header) -->
     <section class="content-header">
         <div class="container-fluid my-2">
             <div class="row mb-2">
@@ -66,34 +87,66 @@ $total_pages = ceil($total_orders / $limit);
                     <h1>Orders</h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                <form action="list_orders.php" method="POST" onsubmit="return confirm('Are you sure you want to delete all orders? This action cannot be undone.');">
-    <button type="submit" class="btn btn-danger">Delete All Orders</button>
-</form>
-
+                    <form action="list_orders.php" method="POST" onsubmit="return confirm('Are you sure you want to delete all orders? This action cannot be undone.');">
+                        <button type="submit" class="btn btn-danger">Delete All Orders</button>
+                    </form>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="card">
-                <div class="card-header">
-                    <div class="card-tools">
-                    <form class="d-flex" action="../admin/search_order.php" method="GET">
-                        <input class="form-control me-2" type="search" name="query_admin" placeholder="Search Products" aria-label="Search" required>
-                        <button class="btn btn-outline-dark" type="submit"><i class="fas fa-search"></i></button>
-                    </form>
-                    </div>
-                </div>
 
                 <div class="card-body table-responsive p-0">
-                    <?php if(isset($_GET['message'])): ?>
-                    <div class="alert alert-success" role="alert">
-                        <?php echo $_GET['message'] ?>
-                    </div>
+                    <?php if (isset($_GET['message'])): ?>
+                        <div class="alert alert-success" role="alert">
+                            <?php echo $_GET['message'] ?>
+                        </div>
+                        <script>
+                            history.replaceState(null, '', window.location.pathname);
+                        </script>
                     <?php endif; ?>
+
+                    <form method="GET" action="list_orders.php" class="p-3">
+                        <div class="row g-3 align-items-center">
+                            <!-- Lọc theo tình trạng đơn hàng -->
+                            <div class="col-md-3">
+                                <label for="order_status" class="form-label">Order Status</label>
+                                <select class="form-control" name="order_status" id="order_status">
+                                    <option value="">-- All --</option>
+                                    <option value="pending" <?= isset($_GET['order_status']) && $_GET['order_status'] == 'pending' ? 'selected' : '' ?>>Pending</option>
+                                    <option value="confirmed" <?= isset($_GET['order_status']) && $_GET['order_status'] == 'confirmed' ? 'selected' : '' ?>>Confirmed</option>
+                                    <option value="delivered" <?= isset($_GET['order_status']) && $_GET['order_status'] == 'delivered' ? 'selected' : '' ?>>Delivered</option>
+                                    <option value="cancelled" <?= isset($_GET['order_status']) && $_GET['order_status'] == 'cancelled' ? 'selected' : '' ?>>Cancelled</option>
+                                </select>
+                            </div>
+
+
+                            <div class="col-md-3">
+                                <label for="start_date" class="form-label">From Date</label>
+                                <input type="date" class="form-control" name="start_date" id="start_date" value="<?= $_GET['start_date'] ?? '' ?>">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="end_date" class="form-label">To Date</label>
+                                <input type="date" class="form-control" name="end_date" id="end_date" value="<?= $_GET['end_date'] ?? '' ?>">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="user_address" class="form-label">Delivery Location</label>
+                                <input type="text" class="form-control" name="user_address" id="user_address" placeholder="District, City..." value="<?= $_GET['user_address'] ?? '' ?>">
+                            </div>
+
+                            <div class="col-md-12 mt-2 d-flex justify-content-end">
+                                <button type="submit" class="btn btn-primary"><i class="fas fa-filter"></i> Filter</button>
+                                <a href="list_orders.php" class="btn btn-secondary" style="margin-left: 16px;">Reset</a>
+                            </div>
+
+                        </div>
+                    </form>
+
                     <table class="table table-hover text-nowrap">
                         <thead>
                             <tr>
@@ -107,46 +160,46 @@ $total_pages = ceil($total_orders / $limit);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php         $stt = $total_orders - (($page - 1) * $limit);
-                            foreach ($orders as $order) { ?>
-                            <tr>
-                                <td><?php echo  $stt--; ?></td>
-                                <td><?php echo $order['user_name'] ?></td>
-                                <td><?php echo $order['user_phone'] ?></td>
-                                <td><?php echo number_format($order['order_cost'], 3, '.', '.'); ?></td>
+                            <?php
+                            $stt = $total_orders - (($page - 1) * $limit);
+                            while ($order = $orders->fetch_assoc()) { ?>
+                                <tr>
+                                    <td><?php echo  $stt--; ?></td>
+                                    <td><?php echo $order['user_name'] ?></td>
+                                    <td><?php echo $order['user_phone'] ?></td>
+                                    <td><?php echo number_format($order['order_cost'], 3, '.', '.'); ?></td>
+                                    <td>
+                                        <?php
+                                        $status = $order['order_status'];
+                                        $statusClass = '';
 
-                                <td>
-
-                                    <?php 
-                                $status = $order['order_status']; 
-                                // Xác định màu nền dựa trên trạng thái đơn hàng
-                                $statusClass = 'bg-danger'; // Mặc định là màu đỏ cho "pending"
-
-                                if ($status === 'shipped') {
-                                    $statusClass = 'bg-warning'; // Màu cam cho "shipped"
-                                } elseif ($status === 'delivered') {
-                                    $statusClass = 'bg-success'; // Màu xanh cho "delivered"
-                                }elseif ($order['order_status'] === 'cancelled') {
-                                    $statusClass = 'bg-primary'; // Màu xanh dương cho "cancelled"
-                                }
-                            ?>
-                                    <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">
-                                        <?php echo htmlspecialchars($status); ?>
-                                    </span>
-                                    <br>
-                                </td>
-                                <td><?php echo $order['order_date'] ?></td>
-                                <td>
-                                    <form action="../admin/order_details.php" method="POST">
-                                        <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
-                                        <input type="submit" name="order_details"
-                                            style="background-color: coral; color: aliceblue; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer;"
-                                            value="Details">
-                                    </form>
-
-
-                                </td>
-                            </tr>
+                                        switch ($order['order_status']) {
+                                            case 'pending':
+                                                $statusClass = 'bg-warning'; 
+                                                break;
+                                            case 'confirmed':
+                                                $statusClass = 'bg-info'; 
+                                                break;
+                                            case 'delivered':
+                                                $statusClass = 'bg-success';
+                                                break;
+                                            case 'cancelled':
+                                                $statusClass = 'bg-danger'; 
+                                                break;
+                                        }
+                                        ?>
+                                        <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">
+                                            <?php echo htmlspecialchars($status); ?>
+                                        </span>
+                                    </td>
+                                    <td><?php echo $order['order_date'] ?></td>
+                                    <td>
+                                        <form action="../admin/order_details.php" method="POST">
+                                            <input type="hidden" name="order_id" value="<?php echo $order['order_id']; ?>">
+                                            <input type="submit" name="order_details" style="background-color: coral; color: aliceblue; border-radius: 8px; padding: 8px 16px; border: none; cursor: pointer;" value="Details">
+                                        </form>
+                                    </td>
+                                </tr>
                             <?php } ?>
                         </tbody>
                     </table>
@@ -154,19 +207,14 @@ $total_pages = ceil($total_orders / $limit);
 
                 <div class="card-footer clearfix">
                     <ul class="pagination pagination m-0 float-right">
-                        <!-- Previous Page Link -->
                         <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
                             <a class="page-link" href="?page=<?php echo $page - 1; ?>">«</a>
                         </li>
-
-                        <!-- Page Number Links -->
                         <?php for ($i = 1; $i <= $total_pages; $i++) { ?>
                             <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
                                 <a class="page-link" href="?page=<?php echo $i; ?>"><?php echo $i; ?></a>
                             </li>
                         <?php } ?>
-
-                        <!-- Next Page Link -->
                         <li class="page-item <?php echo ($page == $total_pages) ? 'disabled' : ''; ?>">
                             <a class="page-link" href="?page=<?php echo $page + 1; ?>">»</a>
                         </li>

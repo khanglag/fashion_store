@@ -135,12 +135,12 @@ calculateTotalCart();
                             <?php foreach ($_SESSION['cart'] as $key => $value) { ?>
                                 <div class="d-flex pb-2" style="display: flex; justify-content: space-between; align-items: center;">
                                     <h6 style="flex: 2; word-wrap: break-word;">
-                                        <?php echo $value['product_name'] ?> x <?php echo $value['product_quantity'] ?>
+                                        <?php echo $value['product_name'] ?> x <?php echo $value['product_quantity']  ?>
                                     </h6>
                                     <h6 style="flex: 1; text-align: right;">
                                         <?php
                                         
-                                        echo number_format((float)$value['product_price'], 0, ',', '.') . ' VND';
+                                        echo number_format((float)$value['product_price'] * (int)$value['product_quantity'], 3, '.', '.') . ' VND';
                                         ?>
                                     </h6>
                                 </div>
@@ -152,7 +152,7 @@ calculateTotalCart();
                             </div>
                             <div class="d-flex summery-end" style="display: flex; justify-content: space-between; align-items: center;">
                                 <h6 style="flex: 2; font-weight: bold;">Total</h6>
-                                <h6 style="flex: 1; text-align: right; font-weight: bold;"><?php echo number_format($_SESSION['total'], 0, ',', '.') . ' VND'; ?></h6>
+                                <h6 style="flex: 1; text-align: right; font-weight: bold;"><?php echo number_format($_SESSION['total'], 3, '.', '.') . ' VND'; ?></h6>
                             </div>
 
                             <style>

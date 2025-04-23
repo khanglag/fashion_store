@@ -101,7 +101,7 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                                         break;}?>   
                             </td>
                             <td>
-                                <?php echo number_format($row['product_price'], 0, '.', '.'); ?>
+                                <?php echo number_format($row['product_price'], 3, '.', '.'); ?>
                             </td>
 
                             <td><?php echo $row['product_quantity']; ?></td>

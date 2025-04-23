@@ -45,6 +45,7 @@ $stmt = $conn->prepare("
     LEFT JOIN status_products 
     ON products.status_products_id = status_products.status_products_id
     WHERE products.product_name LIKE ?
+    AND products.status_products_id != 5
     LIMIT ? OFFSET ?
 ");
 $stmt->bind_param('sii', $search_query, $products_per_page, $start_from);

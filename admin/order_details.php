@@ -6,7 +6,8 @@ $order_details = null;
 $orders = null;
 
 // Kiểm tra nếu `order_id` tồn tại và có chi tiết đơn hàng
-if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
+// if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
+if (isset($_POST['order_id'])) {
     $order_id = $_POST['order_id'];
 
     // Truy vấn chi tiết đơn hàng
@@ -36,19 +37,38 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
 } elseif (isset($_POST['update_status'])) {
     $order_id = $_POST['order_id'];
     $order_status = $_POST['order_status'];
+    // Kiểm tra trạng thái hiện tại của đơn hàng
+    $stmt_check_status = $conn->prepare("SELECT order_status FROM orders WHERE order_id = ?");
+    $stmt_check_status->bind_param('i', $order_id);
+    $stmt_check_status->execute();
+    $result = $stmt_check_status->get_result();
+    $current_status = $result->fetch_assoc()['order_status'];
+    // Đảm bảo trạng thái không thể thay đổi ngược
+    if (($current_status == 'delivered' || $current_status == 'cancelled') && $current_status != $order_status) {
+        echo "Không thể cập nhật trạng thái nữa vì đơn hàng đã được giao hoặc hủy.";
+        exit;
+    }
 
-    // Kiểm tra xem trạng thái có hợp lệ không
-    if (!in_array($order_status, ['pending', 'shipped', 'delivered', 'cancelled'])) {
+    $valid_statuses = ['pending', 'confirmed', 'delivered', 'cancelled'];
+    if (!in_array($order_status, $valid_statuses)) {
         echo "Trạng thái không hợp lệ.";
         exit;
     }
 
+
+    $status_order = ['pending' => 0, 'confirmed' => 1, 'delivered' => 2, 'cancelled' => 3];
+
+    if ($status_order[$order_status] < $status_order[$current_status]) {
+        echo "Không thể cập nhật trạng thái ngược lại.";
+        exit;
+    }
+    // Cập nhật trạng thái
     $stmt2 = $conn->prepare("UPDATE orders SET order_status = ? WHERE order_id = ?");
     $stmt2->bind_param('si', $order_status, $order_id);
 
     if ($stmt2->execute()) {
         header('location:list_orders.php?message=Order status updated successfully');
-        exit; // Dừng thực thi script
+        exit;
     } else {
         echo "Error: " . $conn->error;
     }
@@ -86,33 +106,38 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                         <div class="card-header pt-3">
                             <?php if ($orders && $orders->num_rows > 0) { ?>
                                 <?php foreach ($orders as $order) { ?>
-                                    <div class="row invoice-info">
-                                        <div class="col-sm-4 invoice-col">
+                                    <div class="row invoice-info" style="margin-bottom:15px;">
+                                        <div class="col-sm-6 invoice-col" style=" margin-right: 20px;">
                                             <h1 class="h5 mb-3">Shipping Address</h1>
                                             <address>
-                                                <strong><?php echo htmlspecialchars($order['user_name']); ?></strong><br>
-                                                <?php echo htmlspecialchars($order['user_address']); ?><br>
-                                                <?php echo htmlspecialchars($order['user_phone']); ?><br>
-                                                Email: <?php echo htmlspecialchars($order['user_email']); ?>
+                                                <b>Full name: </b><?php echo htmlspecialchars($order['full_name']); ?><br>
+                                                <b>Address: </b><?php echo htmlspecialchars($order['user_address']); ?><br>
+                                                <b>Phone number: </b><?php echo htmlspecialchars($order['user_phone']); ?><br>
+                                                <b>Email: </b> <?php echo htmlspecialchars($order['user_email']); ?>
                                             </address>
                                         </div>
-                                        <div class="col-sm-4 invoice-col">
+                                        <div class="col-sm-4 invoice-col" ">
                                             <br>
                                             <b>Order ID:</b> <?php echo htmlspecialchars($order['order_id']); ?><br>
-                                            <b>Total:</b> <?php echo number_format($order['order_cost'], 3); ?> VND<br>
+                                            <b>Total:</b> <?php echo number_format($order['order_cost'], 3, '.', '.'); ?> VND<br>
                                             <b>Status:</b>
                                             <?php
-                                            // Thay đổi màu nền theo trạng thái
-                                            $statusClass = 'bg-danger'; // Mặc định là màu đỏ cho "pending"
+                                            $statusClass = '';
 
-                                            if ($order['order_status'] === 'shipped') {
-                                                $statusClass = 'bg-warning'; // Màu cam cho "shipped"
-                                            } elseif ($order['order_status'] === 'delivered') {
-                                                $statusClass = 'bg-success'; // Màu xanh cho "delivered"
-                                            }elseif ($order['order_status'] === 'cancelled') {
-                                                $statusClass = 'bg-primary'; // Màu xanh dương cho "cancelled"
+                                            switch ($order['order_status']) {
+                                                case 'pending':
+                                                    $statusClass = 'bg-warning'; // Vàng
+                                                    break;
+                                                case 'confirmed':
+                                                    $statusClass = 'bg-info'; // Xanh dương
+                                                    break;
+                                                case 'delivered':
+                                                    $statusClass = 'bg-success'; // Xanh lá cây
+                                                    break;
+                                                case 'cancelled':
+                                                    $statusClass = 'bg-danger'; // Đỏ
+                                                    break;
                                             }
-
 
                                             ?>
                                             <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">
@@ -125,6 +150,7 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                                 <p>No order details available.</p>
                             <?php } ?>
                         </div>
+                        
                         <div class="card-body table-responsive p-3">
                             <table class="table table-striped">
                                 <thead>
@@ -132,7 +158,7 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                                         <th>Product</th>
                                         <th width="100">Qty</th>
                                         <th width="100">Size</th>
-                                        <th width="100">Price</th> 
+                                        <th width="100">Price</th>
                                         <th width="100">Total</th>
                                     </tr>
                                 </thead>
@@ -149,49 +175,44 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                                                     <td>" . htmlspecialchars($row['product_quantity']) . "</td>
                                                     <td>";
 
-                                                    // Check product_size and display corresponding size
-                                                     switch ($row['product_size']) {
-                                                            case 1:
-                                                                echo 'S'; // product_size = 1 => S
-                                                                break;
-                                                            case 2:
-                                                                echo 'M'; // product_size = 2 => M
-                                                                break;
-                                                            case 3:
-                                                                echo 'L'; // product_size = 3 => L
-                                                                break;
-                                                            case 4:
-                                                                echo 'XL'; // product_size = 4 => XL
-                                                                break;
-                                                            default:
-                                                                echo 'Pre Size'; // Default, if other value is set
-                                                                break;
-                                                        }     
-                                            echo "</td>
-                                                <td>" . number_format($row['product_price'], 3) . " VND</td>
-                                                <td>" . number_format($total, 3) . " VND</td>
-                                            
-                                                </tr>";
+                                            // Check product_size and display corresponding size
+                                            switch ($row['product_size']) {
+                                                case 1:
+                                                    echo 'S'; // product_size = 1 => S
+                                                    break;
+                                                case 2:
+                                                    echo 'M'; // product_size = 2 => M
+                                                    break;
+                                                case 3:
+                                                    echo 'L'; // product_size = 3 => L
+                                                    break;
+                                                case 4:
+                                                    echo 'XL'; // product_size = 4 => XL
+                                                    break;
+                                                default:
+                                                    echo 'Pre Size'; // Default, if other value is set
+                                                    break;
+                                            }
+                                            echo "<td>" . number_format($row['product_price'], 3, '.', '.') . "&nbsp;VND</td>
+                                                        <td>" . number_format($total, 3, '.', '.') . "&nbsp;VND</td>
+                                                      </tr>";
                                         }
                                     } else {
                                         echo "<tr><td colspan='4'>No products found.</td></tr>";
                                     }
                                     ?>
 
-
-                       
-                     
                                     <tr>
                                         <th colspan="4" class="text-right p-3">Subtotal:</th>
-                                        <td><?php echo number_format($subtotal, 3); ?> VND</td>
+                                        <td><?php echo number_format($subtotal, 3, '.', '.'); ?> VND</td>
                                     </tr>
                                     <tr>
                                         <th colspan="4" class="text-right">Shipping:</th>
-                                        <td>0.000 VND</td>
+                                        <td>0.00 VND</td>
                                     </tr>
                                     <tr>
                                         <th colspan="4" class="text-right">Grand Total:</th>
-                                        <td><?php echo number_format($subtotal , 3); ?> VND</td>
+                                        <td style="font-weight: bold;"><?php echo number_format($subtotal, 3, '.', '.') . "&nbsp;VND"; ?> </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -203,28 +224,41 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                         <div class="card-body">
                             <h2 class="h4 mb-3">Order Status</h2>
                             <form action="order_details.php" method="POST">
-                                <input type="hidden" name="order_id"
-                                    value="<?php echo htmlspecialchars($order['order_id']); ?>">
+                                <input type="hidden" name="order_id" value="<?php echo htmlspecialchars($order['order_id']); ?>">
                                 <div class="mb-3">
-                                    <select name="order_status" id="order_status" class="form-control">
-                                        <?php
-                                        $status_options = ['pending', 'shipped', 'delivered', 'cancelled'];
-                                        foreach ($status_options as $status) {
-                                            $selected = ($order['order_status'] === $status) ? 'selected' : '';
-                                            echo "<option value=\"$status\" $selected>" . ucfirst($status) . "</option>";
-                                        }
-                                        ?>
-                                    </select>
+                                    <?php if ($order['order_status'] === 'delivered' || $order['order_status'] === 'cancelled') { ?>
+                                        <input type="hidden" name="order_status" value="<?php echo $order['order_status']; ?>" />
+                                        <input type="text" class="form-control" value="<?php echo ucfirst($order['order_status']); ?>" disabled />
+                                    <?php } else { ?>
+                                        <select name="order_status" id="order_status" class="form-control">
+                                            <?php
+                                            $status_options = ['pending', 'confirmed', 'delivered', 'cancelled'];
+                                            foreach ($status_options as $status) {
+                                                $selected = ($order['order_status'] === $status) ? 'selected' : '';
+
+                                                if (($order['order_status'] === 'confirmed' && in_array($status, ['delivered', 'cancelled'])) ||
+                                                    ($order['order_status'] === 'pending' && in_array($status, ['confirmed', 'cancelled', 'delivered']))
+                                                ) {
+                                                    echo "<option value=\"$status\" $selected>" . ucfirst($status) . "</option>";
+                                                }
+                                            }
+                                            ?>
+                                        </select>
+                                    <?php } ?>
                                 </div>
                                 <div class="mb-3">
-                                    <button type="submit" class="btn btn-primary" name="update_status">Update</button>
+                                    <button type="submit" class="btn btn-primary" name="update_status"
+                                        <?php echo ($order['order_status'] === 'delivered' || $order['order_status'] === 'cancelled') ? 'disabled' : ''; ?>
+                                        style="display: block; margin: 0 auto;">
+                                        Update
+                                    </button>
                                 </div>
                             </form>
                         </div>
+
+
                     </div>
                 </div>
-            </div>
-        </div>
     </section>
     <!-- /.content -->
 </div>

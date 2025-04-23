@@ -1,14 +1,8 @@
 <?php
-
 session_start();  // Start session at the very top
-
 include('layouts/header.php');
 
-
-
 ?>
-
-
    <section id="home">
     <!-- banner -->
     <div class="home-slider">
@@ -18,9 +12,6 @@ include('layouts/header.php');
 </div>
 </section>
 
-
-
-
 <!-- Featured Section -->
     <section id="featured" class="my-5 py-5">
 
@@ -29,7 +20,6 @@ include('layouts/header.php');
     <hr>
     <p class="fs-4">Here you can check out for our product</p>
 </div>
-
 
 <div class="row mx-auto container-fluid">
 </div>
@@ -88,7 +78,6 @@ include('layouts/header.php');
         <p class="fs-4">Here you can check out for our product</p>
     </div>
 
-
     <div class="row mx-auto container-fluid">
     </div>
 </section>    
@@ -102,8 +91,7 @@ include('layouts/header.php');
                     $page = isset($_GET['page']) ? $_GET['page'] : 1;
                     $start_from = ($page - 1) * $products_per_page;
 
-                 
-                    
+                                    
                     // Kiểm tra nếu có yêu cầu tìm kiếm từ người dùng
                     if (isset($_POST['search'])) {
                         $category = $_POST['category']; // Tên danh mục đã chọn
@@ -116,6 +104,7 @@ include('layouts/header.php');
                             FROM products 
                             JOIN category ON products.category_id = category.category_id 
                             WHERE category.category_name = ? AND product_price BETWEEN ? AND ?
+                            AND products.status_products_id != 5
                         ');
                         $stmt->bind_param('sii', $category, $min_price, $max_price);
                         $stmt->execute();
@@ -128,6 +117,7 @@ include('layouts/header.php');
                             FROM products 
                             JOIN category ON products.category_id = category.category_id 
                             WHERE category.category_name = ? AND product_price BETWEEN ? AND ? 
+                            AND products.status_products_id != 5
                             LIMIT ? OFFSET ?
                         ');
                         $stmt->bind_param('siiii', $category, $min_price, $max_price, $products_per_page, $start_from);
@@ -147,28 +137,27 @@ include('layouts/header.php');
                         $products = $stmt->get_result();
                     }
                             $total_pages = ceil($total_products / $products_per_page); // Tổng số trang dựa trên tổng số sản phẩm
-
                   
                                 // Truy vấn lấy sản phẩm mới nhất từ cơ sở dữ liệu
-                    $stmt = $conn->prepare("
-                    SELECT 
-                        products.product_id, 
-                        products.product_name, 
-                        products.product_price, 
-                        products.product_price_discount, 
-                        products.product_image, 
-                        products.product_image2, 
-                        COALESCE(status_products.status_products_name, 'Unknown') AS status_products_name
-                    FROM products
-                    LEFT JOIN status_products 
-                    ON products.status_products_id = status_products.status_products_id
-                    ORDER BY products.product_id DESC  -- Sắp xếp sản phẩm theo ID giảm dần (mới nhất)
-                    LIMIT ? OFFSET ?
-                ");
-                $stmt->bind_param('ii', $products_per_page, $start_from);
-                $stmt->execute();
-                $products = $stmt->get_result();
-                                    
+                                $stmt = $conn->prepare("
+                                SELECT 
+                                    products.product_id, 
+                                    products.product_name, 
+                                    products.product_price, 
+                                    products.product_price_discount, 
+                                    products.product_image, 
+                                    products.product_image2, 
+                                    products.status_products_id, 
+                                    COALESCE(status_products.status_products_name, 'Unknown') AS status_products_name
+                                FROM products
+                                LEFT JOIN status_products ON products.status_products_id = status_products.status_products_id
+                                WHERE products.status_products_id != 5
+                                LIMIT ? OFFSET ?
+                            ");
+                            $stmt->bind_param("ii", $products_per_page, $start_from);
+                            $stmt->execute();
+                            $products = $stmt->get_result();
+                                   
 
                ?>
 
@@ -177,6 +166,9 @@ include('layouts/header.php');
         
                     <!-- Products Section -->
                     <?php while ($row = $products->fetch_assoc()) { 
+                        if( $row['status_products_id'] == 5) {
+                            continue; // Bỏ qua sản phẩm có status_products_id = 5
+                        }
                                     // Kiểm tra trạng thái sản phẩm, nếu sản phẩm đã "Sold Out", "Pre Order"
                     if ($row['status_products_name'] == 'Sold Out') {
                         // Nếu sản phẩm đã Sold Out, chuyển hướng đến trang sold_out.php khi người dùng click vào
@@ -250,21 +242,15 @@ include('layouts/header.php');
     </div>
 </div>
 
-
-
 <script>
 function updatePriceLabel(value) {
     document.getElementById('selectedPrice').textContent = value;
     document.getElementById('maxPrice').value = value;
 }
 
-
 </script>
     
 </section>
-<!-- Brand -->
-
-
 
 <?php include('layouts/footer.php'); ?>
 

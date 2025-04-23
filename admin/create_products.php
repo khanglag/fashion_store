@@ -88,7 +88,7 @@ if (isset($_POST['create_product'])) {
         "siisssssddsi",  // Kiểu dữ liệu của các tham số: s = string, i = integer, d = double
         $product_name,     // product_name: chuỗi (string)
         $product_category, // category_id: số nguyên (integer)
-        $product_status,    
+        $product_status,
         $product_description, // product_description: chuỗi (string)
         $image_names[0],   // product_image: chuỗi (string)
         $image_names[1],   // product_image2: chuỗi (string)
@@ -96,7 +96,7 @@ if (isset($_POST['create_product'])) {
         $image_names[3],   // product_image4: chuỗi (string)
         $product_price,    // product_price: số thực (double)
         $product_price_discount,
-        $product_color   ,  // product_color: chuỗi (string)
+        $product_color,  // product_color: chuỗi (string)
         $quantity,
     );
 
@@ -179,30 +179,34 @@ if (isset($_POST['create_product'])) {
                                             </select>
                                         </div>
                                     </div>
-                           
+
 
 
                                     <div class="col-md-12">
                                         <div class="mb-3">
                                             <label for="product_description">Description</label>
                                             <textarea name="product_description" id="product_description" cols="98"
-                                                rows="10" class="summernote" placeholder="Description" ></textarea>
+                                                rows="10" class="summernote" placeholder="Description"></textarea>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Upload images -->
                         <?php foreach (['image', 'image2', 'image3', 'image4'] as $imageField): ?>
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <h2 class="h4 mb-3">Upload <?php echo ucfirst($imageField); ?></h2>
+                                    <img id="<?php echo $imageField; ?>_preview" style="display:none; width: 100px; height: auto;" />
+                                    <br>
                                     <input type="file" name="<?php echo $imageField; ?>" id="<?php echo $imageField; ?>"
-                                        class="form-control" required>
+                                        class="form-control" onchange="previewImage(this, '<?php echo $imageField; ?>_preview')" required>
+                                    <br>
+                                    
                                 </div>
                             </div>
-                        <?php endforeach; ?>   
+                        <?php endforeach; ?>
+
 
                         <div class="card mb-3">
                             <div class="card-body">
@@ -218,7 +222,7 @@ if (isset($_POST['create_product'])) {
                                 <div class="mb-3">
                                     <label for="product_price_discount">Price Discount</label>
                                     <input type="number" name="product_price_discount" id="product_price_discount" class="form-control"
-                                        placeholder="Price Discount ( Optional )" step="0.01" >
+                                        placeholder="Price Discount ( Optional )" step="0.01">
                                 </div>
                             </div>
                         </div>
@@ -248,11 +252,25 @@ if (isset($_POST['create_product'])) {
                     <a href="list_products.php" class="btn btn-primary">Cancel</a>
                 </div>
             </div>
-        
-  
-    </form>
-    
+
+
+        </form>
+
     </section>
 </div>
 
 <?php include('../admin/layouts/sidebar.php') ?>
+<script>
+    function previewImage(input, previewId) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.getElementById(previewId);
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+</script>

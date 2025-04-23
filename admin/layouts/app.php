@@ -1,7 +1,3 @@
-
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -14,11 +10,12 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <!-- Theme style -->
     <link rel="stylesheet" href="css/adminlte.min.css">
     <link rel="stylesheet" href="css/custom.css">
- 
+
 
 </head>
 
@@ -53,11 +50,11 @@
                         <!-- <h4 class="h4 mb-0"><strong>Mohit Singh</strong></h4>
                         <div class="mb-3">example@example.com</div> -->
                         <p><strong>Tên:</strong> <span>
-    <?php echo !empty($_SESSION['admin_name']) ? htmlspecialchars($_SESSION['admin_name']) : 'Không có dữ liệu'; ?>
-</span></p>
-<p><strong>Email:</strong> <span>
-    <?php echo !empty($_SESSION['admin_email']) ? htmlspecialchars($_SESSION['admin_email']) : 'Không có dữ liệu'; ?>
-</span></p>
+                                <?php echo !empty($_SESSION['admin_name']) ? htmlspecialchars($_SESSION['admin_name']) : 'Không có dữ liệu'; ?>
+                            </span></p>
+                        <p><strong>Email:</strong> <span>
+                                <?php echo !empty($_SESSION['admin_email']) ? htmlspecialchars($_SESSION['admin_email']) : 'Không có dữ liệu'; ?>
+                            </span></p>
 
 
                         <!-- <div class="dropdown-divider"></div>
