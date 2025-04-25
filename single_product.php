@@ -175,7 +175,7 @@ input[type="radio"] {
                     <button class="buy-btn rounded-2 text-uppercase" type="submit" name="add_to_cart">Add To Cart</button>
                 </form>
                 <h3 class="py-5 text-uppercase">Product Details</h3>
-                <p><?php echo $row['product_description']; ?></p>
+                <p><?php echo nl2br($row["product_description"]); ?></p>
                 
                
                 
