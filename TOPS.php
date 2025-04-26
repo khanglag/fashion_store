@@ -193,24 +193,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 
                             <!-- Price Section -->
-<<<<<<< HEAD
-                            <div class="col-lg-12">
-                                <p class="text-uppercase fw-bold">Price Range</p>
-
-                                <!-- Thanh kéo -->
-                                <div id="priceSlider"></div>
-
-                                <!-- Hiển thị giá -->
-                                <p class="m-4 pt-4 text-uppercase fw-bold">
-                                    Price: <span id="priceDisplay">1.000.000 - 8.000.000</span> VND
-                                </p>
-
-                                <!-- Hidden inputs để submit -->
-                                <input type="hidden" name="min_price" id="minPrice" value="1000000">
-                                <input type="hidden" name="max_price" id="maxPrice" value="8000000">
-                            </div>
-
-=======
                             <div class="col-lg-12 mt-3">
                                 <p class="text-uppercase fw-bold">Price Range</p>
                                 <div class="d-flex align-items-center" style="gap: 8px;">
@@ -220,7 +202,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 </div>
                                 <p class="text-uppercase fw-bold">Price: <span id="selectedPrice"><?= $min_price ?> - <?= $max_price ?></span> VND</p>
                             </div>
->>>>>>> ke
                         </div>
                     </div>
 
@@ -292,20 +273,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <nav aria-label="Page navigation example">
                     <ul class="container text-center pagination mt-5">
                         <?php if ($page > 1) : ?>
-<<<<<<< HEAD
-                            <li class="page-item"><a href="TOPS.php?page=<?php echo $page - 1; ?>"
-                                    class="page-link">
-                                    << </a>
-                            </li>
-                        <?php endif; ?>
-                        <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
-                            <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>"><a
-                                    href="TOPS.php?page=<?php echo $i; ?>" class="page-link"><?php echo $i; ?></a></li>
-                        <?php endfor; ?>
-                        <?php if ($page < $total_pages) : ?>
-                            <li class="page-item"><a href="TOPS.php?page=<?php echo $page + 1; ?>"
-                                    class="page-link"> >> </a></li>
-=======
                             <li class="page-item">
                                 <a href="TOPS.php?page=<?php echo $page - 1; ?>&min_price=<?php echo urlencode($min_price); ?>&max_price=<?php echo urlencode($max_price); ?>" class="page-link">
                                     <<
@@ -325,7 +292,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                     >>
                                 </a>
                             </li>
->>>>>>> ke
                         <?php endif; ?>
                     </ul>
                 </nav>
@@ -336,39 +302,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 <?php include('layouts/footer.php') ?>
 <script>
-<<<<<<< HEAD
-    document.addEventListener("DOMContentLoaded", function() {
-        var priceSlider = document.getElementById("priceSlider");
-
-        noUiSlider.create(priceSlider, {
-            start: [1, 10000000],
-            connect: true,
-            step: 1000,
-            range: {
-                min: 1,
-                max: 10000000
-            },
-            tooltips: true,
-            format: {
-                to: function(value) {
-                    return Math.round(value).toLocaleString();
-                },
-                from: function(value) {
-                    return Number(value.replace(/,/g, ''));
-                }
-            }
-        });
-
-        priceSlider.noUiSlider.on("update", function(values, handle) {
-            const minVal = Number(values[0].replace(/,/g, ''));
-            const maxVal = Number(values[1].replace(/,/g, ''));
-
-            document.getElementById("priceDisplay").innerText = values[0] + " - " + values[1];
-            document.getElementById("minPrice").value = minVal;
-            document.getElementById("maxPrice").value = maxVal;
-        });
-    });
-=======
     document.getElementById('minPriceInput').addEventListener('input', updatePrice);
     document.getElementById('maxPriceInput').addEventListener('input', updatePrice);
 
@@ -377,7 +310,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         var maxPrice = document.getElementById('maxPriceInput').value;
         document.getElementById('selectedPrice').textContent = minPrice + ' - ' + maxPrice;
     }
->>>>>>> ke
 </script>
 
 <script>
