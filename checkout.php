@@ -39,6 +39,10 @@ if (isset($_POST['checkout'])) {
 
     $stmt->execute();
     $order_id = $stmt->insert_id;
+    $real_query = addslashes("INSERT INTO orders (customer_id, order_date, status) VALUES ($user_id, '$order_date', 'pending')");
+
+    echo "<script>alert(\"$real_query\");</script>";
+
 
     // Lưu từng sản phẩm trong giỏ hàng
     $detail_query = "INSERT INTO order_details (order_id, product_id, product_name, product_size_id, product_price, quantity) VALUES (?, ?, ?, ?, ?, ?)";
@@ -109,19 +113,27 @@ calculateTotalCart();
                             <div class="row form-group">
                                 <div class="col-md-12">
                                     <div class="mb-3">
-                                        <input type="text" class="form-control" id="user_name" name="user_name" value="<?php echo htmlspecialchars($user['full_name']); ?>">
+                                        <input type="text" class="form-control" id="user_name" name="user_name"
+                                            value="<?php echo htmlspecialchars($user['full_name']); ?>"
+                                            placeholder="Nhập họ và tên" required>
                                     </div>
                                 </div>
+
                                 <div class="col-md-12">
                                     <div class="mb-3">
-                                        <input type="text" class="form-control" id="user_phone" name="user_phone" value="<?php echo htmlspecialchars($user['user_phone']); ?>">
+                                        <input type="text" class="form-control" id="user_phone" name="user_phone"
+                                            value="<?php echo htmlspecialchars($user['user_phone']); ?>"
+                                            placeholder="Nhập số điện thoại" required>
                                     </div>
                                 </div>
+
                                 <div class="col-md-12">
                                     <div class="mb-3">
-                                        <textarea name="user_address" id="user_address" class="form-control"><?php echo htmlspecialchars($user['user_address']); ?></textarea>
+                                        <textarea name="user_address" id="user_address" class="form-control"
+                                            placeholder="Nhập địa chỉ giao hàng" required><?php echo htmlspecialchars($user['user_address']); ?></textarea>
                                     </div>
                                 </div>
+
 
                             </div>
                         </div>
@@ -141,6 +153,7 @@ calculateTotalCart();
                                     </h6>
                                     <h6 style="flex: 1; text-align: right;">
                                         <?php
+
 
                                         echo number_format((float)$value['product_price'] * (int)$value['product_quantity'], 3, '.', '.') . ' VND';
                                         ?>

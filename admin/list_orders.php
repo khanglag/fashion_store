@@ -186,6 +186,10 @@ $total_pages = ceil($total_orders / $limit);
                                             case strcasecmp($status, 'cancelled') == 0:
                                                 $statusClass = 'bg-danger';
                                                 break;
+                                            default:
+                                                $statusClass = 'bg-warning'; 
+                                                break;
+                                            
                                         }
                                         ?>
                                         <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">

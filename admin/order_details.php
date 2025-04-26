@@ -1,8 +1,52 @@
 <?php
 include('../server/connection.php');
 
-// Kiểm tra nếu `order_id` tồn tại
-if (isset($_POST['order_id'])) {
+// Khởi tạo biến
+$order_details = null;
+$orders = null;
+
+// Kiểm tra nếu `order_id` tồn tại và có chi tiết đơn hàng
+// if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
+    if (isset($_POST['update_status'])) {
+        $order_id = $_POST['order_id'];
+        $order_status = $_POST['order_status'];
+        // Kiểm tra trạng thái hiện tại của đơn hàng
+        $stmt_check_status = $conn->prepare("SELECT order_status FROM orders WHERE order_id = ?");
+        $stmt_check_status->bind_param('i', $order_id);
+        $stmt_check_status->execute();
+        $result = $stmt_check_status->get_result();
+        $current_status = $result->fetch_assoc()['order_status'];
+        // Đảm bảo trạng thái không thể thay đổi ngược
+        if (($current_status == 'delivered' || $current_status == 'cancelled') && $current_status != $order_status) {
+            echo "Không thể cập nhật trạng thái nữa vì đơn hàng đã được giao hoặc hủy.";
+            exit;
+        }
+    
+        $valid_statuses = ['pending', 'confirmed', 'delivered', 'cancelled'];
+        if (!in_array($order_status, $valid_statuses)) {
+            echo "Trạng thái không hợp lệ.";
+            exit;
+        }
+    
+    
+        $status_order = ['pending' => 0, 'confirmed' => 1, 'delivered' => 2, 'cancelled' => 3];
+    
+        if ($status_order[$order_status] < $status_order[$current_status]) {
+            echo "Không thể cập nhật trạng thái ngược lại.";
+            exit;
+        }
+        // Cập nhật trạng thái
+        $stmt2 = $conn->prepare("UPDATE orders SET order_status = ? WHERE order_id = ?");
+        $stmt2->bind_param('si', $order_status, $order_id);
+    
+        if ($stmt2->execute()) {
+            header('location:list_orders.php?message=Order status updated successfully');
+            exit;
+        } else {
+            echo "Error: " . $conn->error;
+        }
+    }
+elseif (isset($_POST['order_id'])) {
     $order_id = $_POST['order_id'];
 
     // Truy vấn đơn hàng
@@ -24,44 +68,9 @@ if (isset($_POST['order_id'])) {
     if ($order_details === false) {
         die("Lỗi: " . $conn->error);
     }
-} elseif (isset($_POST['update_status'])) {
-    if (!isset($_POST['order_id']) || !isset($_POST['order_status'])) {
-        die("Thiếu thông tin đơn hàng.");
-    }
-
-    $order_id = $_POST['order_id'];
-    $order_status = $_POST['order_status'];
-
-    // Kiểm tra trạng thái hiện tại
-    $stmt_check_status = $conn->prepare("SELECT order_status FROM orders WHERE order_id = ?");
-    $stmt_check_status->bind_param('i', $order_id);
-    $stmt_check_status->execute();
-    $result = $stmt_check_status->get_result();
-    if ($result->num_rows === 0) {
-        die("Không tìm thấy đơn hàng.");
-    }
-    $current_status = $result->fetch_assoc()['order_status'];
-
-    // Ngăn trạng thái bị thay đổi ngược
-    $status_order = ['pending' => 0, 'confirmed' => 1, 'delivered' => 2, 'cancelled' => 3];
-    if (!isset($status_order[$order_status]) || !isset($status_order[$current_status])) {
-        die("Trạng thái không hợp lệ.");
-    }
-    if ($status_order[$order_status] < $status_order[$current_status]) {
-        die("Không thể cập nhật trạng thái ngược lại.");
-    }
-
-    // Cập nhật trạng thái đơn hàng
-    $stmt2 = $conn->prepare("UPDATE orders SET order_status = ? WHERE order_id = ?");
-    $stmt2->bind_param('si', $order_status, $order_id);
-
-    if ($stmt2->execute()) {
-        echo "<script>alert('Cập nhật trạng thái thành công!'); window.location.href='list_orders.php?message=Order status updated successfully';</script>";
-    } else {
-        die("Lỗi: " . $conn->error);
-    }
-} else {
-    die("Không có thông tin đơn hàng.");
+}  else {
+    echo "No order ID provided.";
+    exit;
 }
 ?>
 
@@ -102,7 +111,7 @@ if (isset($_POST['order_id'])) {
                                                 <b>Email: </b> <?php echo htmlspecialchars($order['user_email']); ?>
                                             </address>
                                         </div>
-                                        <div class="col-sm-4 invoice-col">
+                                        <div class="col-sm-4 invoice-col" >
                                             <br>
                                             <b>Order ID:</b> <?php echo htmlspecialchars($order['order_id']); ?><br>
                                             <b>Total:</b> <?php echo number_format($order['order_cost'], 3, '.', '.'); ?> VND<br>
@@ -111,9 +120,6 @@ if (isset($_POST['order_id'])) {
                                             $statusClass = '';
 
                                             switch ($order['order_status']) {
-                                                case 'pending':
-                                                    $statusClass = 'bg-warning'; // Vàng
-                                                    break;
                                                 case 'confirmed':
                                                     $statusClass = 'bg-info'; // Xanh dương
                                                     break;
@@ -122,6 +128,10 @@ if (isset($_POST['order_id'])) {
                                                     break;
                                                 case 'cancelled':
                                                     $statusClass = 'bg-danger'; // Đỏ
+                                                    break;
+                                                    
+                                                default:
+                                                    $statusClass = 'bg-warning'; // Vàng
                                                     break;
                                             }
 
@@ -220,7 +230,7 @@ if (isset($_POST['order_id'])) {
                                     <?php } else { ?>
                                         <select name="order_status" id="order_status" class="form-control">
                                             <?php
-                                            $status_options = ['pending', 'confirmed', 'delivered', 'cancelled'];
+                                            $status_options = ['Pending','pending', 'confirmed', 'delivered', 'cancelled'];
                                             foreach ($status_options as $status) {
                                                 // Sử dụng strcasecmp để so sánh không phân biệt chữ hoa chữ thường
                                                 $selected = (strcasecmp($order['order_status'], $status) == 0) ? 'selected' : '';
