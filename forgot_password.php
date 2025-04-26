@@ -39,7 +39,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 $update_stmt->execute();
 
                 // Gửi email với mã reset mật khẩu
-                $reset_link = "http://localhost/fashionstore/admin/reset_password.php?code=" . $reset_code;
+                $reset_link = "http://localhost/fashion_store/reset_password.php?code=" . $reset_code;
                 $subject = "Yêu cầu đặt lại mật khẩu";
                 $message = "Chào bạn,\n\nBạn đã yêu cầu đặt lại mật khẩu. Vui lòng nhấp vào liên kết dưới đây để thiết lập lại mật khẩu của bạn:\n\n" . $reset_link . "\n\nMã reset sẽ hết hạn sau 1 giờ.\n\nCảm ơn bạn!";
                 $headers = "From: no-reply@yourdomain.com";

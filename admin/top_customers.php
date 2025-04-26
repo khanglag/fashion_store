@@ -13,7 +13,9 @@ $topCustomers = [];
 
 if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
     $from = $_GET['from_date'];
-    $to = $_GET['to_date'];
+    $to_old = $_GET['to_date'];
+
+    $to = date("Y-m-d", strtotime($to_old . ' +1 day'));
 
     // Truy vấn 5 khách hàng có tổng đơn hàng lớn nhất
     $query = "

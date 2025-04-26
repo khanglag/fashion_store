@@ -22,7 +22,7 @@ if (isset($_GET['code'])) {
         // Email hợp lệ, hiển thị form nhập mật khẩu mới
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $new_password = $_POST['new_password'];
-            $hashed_password = password_hash($new_password, PASSWORD_DEFAULT);
+            $hashed_password = md5($new_password);
 
             // Cập nhật mật khẩu mới và xóa mã reset
             $update_sql = "UPDATE users SET user_password = ?, reset_code = NULL, reset_expiry = NULL WHERE reset_code = ?";

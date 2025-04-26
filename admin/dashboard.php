@@ -85,7 +85,7 @@ mysqli_close($conn);
                         <div class="icon">
                             <i class="ion ion-bag"></i>
                         </div>
-                        <a href="admin/list_orders.php" class="small-box-footer text-dark">More info <i
+                        <a href="list_orders.php" class="small-box-footer text-dark">More info <i
                                 class="fas fa-arrow-circle-right"></i></a>
                     </div>
                 </div>
