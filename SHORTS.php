@@ -4,79 +4,90 @@ include('server/connection.php');
 // Thiết lập số lượng sản phẩm hiển thị trên mỗi trang
 $products_per_page = 8;
 
-// Kiểm tra trang hiện tại, mặc định là trang 1 nếu không có trang nào được chọn
-$page = isset($_GET['page']) ? $_GET['page'] : 1;
+// Xác định trang hiện tại
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $start_from = ($page - 1) * $products_per_page;
 
-// Danh sách các danh mục cần truy vấn
-$categories = ['BOTTOMS/SHORTS'];
+// Cài đặt bộ lọc
+$category_ids = [13]; // Bạn có thể thay bằng mảng khác nếu muốn lọc nhiều loại
+$min_price = isset($_POST['min_price']) ? (int)$_POST['min_price'] : 0;
+$max_price = isset($_POST['max_price']) ? (int)$_POST['max_price'] : 10000000;
 
-// Kiểm tra nếu có yêu cầu tìm kiếm từ người dùng
+// Kiểm tra có tìm kiếm không
 if (isset($_POST['search'])) {
-    $min_price = $_POST['min_price'];
-    $max_price = $_POST['max_price'];
-
-    // Truy vấn tổng số sản phẩm trong các danh mục theo điều kiện tìm kiếm
-    $stmt = $conn->prepare('
-        SELECT COUNT(*) as total 
+    // Đếm tổng sản phẩm phù hợp
+    $placeholders = implode(',', array_fill(0, count($category_ids), '?'));
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total 
         FROM products 
-        JOIN category ON products.category_id = category.category_id 
-        WHERE category.category_name IN (?) 
+        WHERE category_id IN ($placeholders) 
         AND product_price BETWEEN ? AND ?
-    ');
-
-    // Tạo mảng tham số cho bind_param
-    $params = array_merge($categories, [$min_price, $max_price]);
-    $stmt->bind_param(str_repeat('s', count($categories)) . 'ii', ...$params);
+        AND products.status_products_id != 5
+    ");
+    $params = array_merge($category_ids, [$min_price, $max_price]);
+    $stmt->bind_param(str_repeat('i', count($category_ids)) . 'ii', ...$params);
     $stmt->execute();
     $result = $stmt->get_result();
     $total_products = $result->fetch_assoc()['total'];
 
-    // Truy vấn sản phẩm theo trang hiện tại trong các danh mục
-    $stmt = $conn->prepare('
-        SELECT products.* 
-        FROM products 
-        JOIN category ON products.category_id = category.category_id 
-        WHERE category.category_name IN (?) 
-        AND product_price BETWEEN ? AND ? 
+    // Truy vấn danh sách sản phẩm
+    $stmt = $conn->prepare("
+        SELECT 
+            products.product_id, 
+            products.product_name, 
+            products.product_price, 
+            products.product_price_discount, 
+            products.product_image, 
+            products.product_image2, 
+            COALESCE(status_products.status_products_name, 'Unknown') AS status_products_name
+        FROM products
+        LEFT JOIN status_products 
+        ON products.status_products_id = status_products.status_products_id
+        WHERE category_id IN ($placeholders)
+        AND product_price BETWEEN ? AND ?
+        AND products.status_products_id != 5
         LIMIT ? OFFSET ?
-    ');
-
-    // Tạo mảng tham số cho bind_param
-    $params = array_merge($categories, [$min_price, $max_price, $products_per_page, $start_from]);
-    $stmt->bind_param(str_repeat('s', count($categories)) . 'iiii', ...$params);
+    ");
+    $params = array_merge($category_ids, [$min_price, $max_price, $products_per_page, $start_from]);
+    $stmt->bind_param(str_repeat('i', count($category_ids)) . 'iiii', ...$params);
     $stmt->execute();
     $products = $stmt->get_result();
 } else {
-    // Truy vấn tổng số sản phẩm trong các danh mục khi không có điều kiện tìm kiếm
-    $stmt = $conn->prepare('
-        SELECT COUNT(*) as total 
+    // Khi không tìm kiếm, chỉ lọc theo danh mục
+    $placeholders = implode(',', array_fill(0, count($category_ids), '?'));
+    $stmt = $conn->prepare("
+        SELECT COUNT(*) AS total 
         FROM products 
-        JOIN category ON products.category_id = category.category_id 
-        WHERE category.category_name IN (?)
-    ');
-
-    // Tạo mảng tham số cho bind_param
-    $stmt->bind_param(str_repeat('s', count($categories)), ...$categories);
+        WHERE category_id IN ($placeholders)
+        AND products.status_products_id != 5
+    ");
+    $stmt->bind_param(str_repeat('i', count($category_ids)), ...$category_ids);
     $stmt->execute();
     $result = $stmt->get_result();
     $total_products = $result->fetch_assoc()['total'];
 
-    // Truy vấn sản phẩm trong các danh mục khi không có điều kiện tìm kiếm
-    $stmt = $conn->prepare('
-        SELECT products.* 
-        FROM products 
-        JOIN category ON products.category_id = category.category_id 
-        WHERE category.category_name IN (?)
+    $stmt = $conn->prepare("
+        SELECT 
+            products.product_id, 
+            products.product_name, 
+            products.product_price, 
+            products.product_price_discount, 
+            products.product_image, 
+            products.product_image2, 
+            COALESCE(status_products.status_products_name, 'Unknown') AS status_products_name
+        FROM products
+        LEFT JOIN status_products 
+        ON products.status_products_id = status_products.status_products_id
+        WHERE category_id IN ($placeholders)
+        AND products.status_products_id != 5
         LIMIT ? OFFSET ?
-    ');
-
-    // Tạo mảng tham số cho bind_param
-    $params = array_merge($categories, [$products_per_page, $start_from]);
-    $stmt->bind_param(str_repeat('s', count($categories)) . 'ii', ...$params);
+    ");
+    $params = array_merge($category_ids, [$products_per_page, $start_from]);
+    $stmt->bind_param(str_repeat('i', count($category_ids)) . 'ii', ...$params);
     $stmt->execute();
     $products = $stmt->get_result();
 }
+<<<<<<< HEAD
 // Truy vấn lấy sản phẩm thuộc các category_id = 1, 6, 7, 8, 9, 10 và trạng thái sản phẩm từ cơ sở dữ liệu
 $stmt = $conn->prepare("
 SELECT 
@@ -121,6 +132,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 ?>
 
+=======
+
+// Tính tổng số trang
+$total_pages = ceil($total_products / $products_per_page);
+?>
+
+>>>>>>> ke
 <?php include('layouts/header.php') ?>
 
 <div class="container">
@@ -141,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <p class="text-uppercase fs-3">Search Product</p>
                     <hr class="mx-auto">
                 </div>
-                <form action="SHORTS.php" method="POST">
+                <form id="searchForm" action="SHORTS.php" method="POST">
                     <div class="row mx-auto container">
                         <div class="row">
                             <!-- Category Section -->
@@ -161,6 +179,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             </div>
 
                             <!-- Price Section -->
+<<<<<<< HEAD
                             <div class="col-lg-12">
                                 <p class="text-uppercase fw-bold">Price Range</p>
 
@@ -177,6 +196,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                                 <input type="hidden" name="max_price" id="maxPrice" value="8000000">
                             </div>
 
+=======
+                            <div class="col-lg-12 mt-3">
+                                <p class="text-uppercase fw-bold">Price Range</p>
+                                <div class="d-flex align-items-center" style="gap: 8px;">
+                                    <input type="number" name="min_price" id="minPriceInput" value="<?= $min_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+                                    <span class="mx-2 fw-bold">-</span>
+                                    <input type="number" name="max_price" id="maxPriceInput" value="<?= $max_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+                                </div>
+                                <p class="text-uppercase fw-bold">Price: <span id="selectedPrice"><?= $min_price ?> - <?= $max_price ?></span> VND</p>
+                            </div>
+>>>>>>> ke
                         </div>
                     </div>
 
@@ -244,10 +274,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <?php } ?>
                 </div>
 
-                <!-- Pagination Section -->
                 <nav aria-label="Page navigation example">
                     <ul class="container text-center pagination mt-5">
                         <?php if ($page > 1) : ?>
+<<<<<<< HEAD
                             <li class="page-item"><a href="BOTTOMS.php?page=<?php echo $page - 1; ?>"
                                     class="page-link">
                                     << </a>
@@ -260,17 +290,49 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         <?php if ($page < $total_pages) : ?>
                             <li class="page-item"><a href="BOTTOMS.php?page=<?php echo $page + 1; ?>"
                                     class="page-link"> >> </a></li>
+=======
+                            <li class="page-item">
+                                <a href="SHORTS.php?page=<?php echo $page - 1; ?>&min_price=<?php echo urlencode($min_price); ?>&max_price=<?php echo urlencode($max_price); ?>" class="page-link">
+                                    <<
+                                        </a>
+                            </li>
+                        <?php endif; ?>
+                        <?php for ($i = 1; $i <= $total_pages; $i++) : ?>
+                            <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
+                                <a href="SHORTS.php?page=<?php echo $i; ?>&min_price=<?php echo urlencode($min_price); ?>&max_price=<?php echo urlencode($max_price); ?>" class="page-link">
+                                    <?php echo $i; ?>
+                                </a>
+                            </li>
+                        <?php endfor; ?>
+                        <?php if ($page < $total_pages) : ?>
+                            <li class="page-item">
+                                <a href="SHORTS.php?page=<?php echo $page + 1; ?>&min_price=<?php echo urlencode($min_price); ?>&max_price=<?php echo urlencode($max_price); ?>" class="page-link">
+                                    >>
+                                </a>
+                            </li>
+>>>>>>> ke
                         <?php endif; ?>
                     </ul>
                 </nav>
-            </section>
+
         </div>
+
     </div>
 </div>
-
 <?php include('layouts/footer.php') ?>
+<script>
+    document.getElementById('minPriceInput').addEventListener('input', updatePrice);
+    document.getElementById('maxPriceInput').addEventListener('input', updatePrice);
+
+    function updatePrice() {
+        var minPrice = document.getElementById('minPriceInput').value;
+        var maxPrice = document.getElementById('maxPriceInput').value;
+        document.getElementById('selectedPrice').textContent = minPrice + ' - ' + maxPrice;
+    }
+</script>
 
 <script>
+<<<<<<< HEAD
     document.addEventListener("DOMContentLoaded", function() {
         var priceSlider = document.getElementById("priceSlider");
 
@@ -314,6 +376,23 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 window.location.href = category + '.php'; // Chuyển hướng đến trang tương ứng
             }
         });
+=======
+    document.getElementById("searchForm").addEventListener("submit", function(e) {
+        const selectedCategory = document.querySelector('input[name="category"]:checked');
+
+        const minPrice = document.getElementById('minPriceInput').value;
+        const maxPrice = document.getElementById('maxPriceInput').value;
+
+        if (selectedCategory) {
+            const category = selectedCategory.value.toLowerCase(); // xử lý dấu cách nếu có
+            const currentURL = category + ".php";
+            this.action = currentURL + `?page=1&min_price=${minPrice}&max_price=${maxPrice}&category=${category}`; // chuyển hướng tới trang phù hợp
+        } else {
+            // Không chọn gì thì giữ nguyên action hiện tại (không thay đổi URL)
+            // Có thể để this.action = window.location.pathname nếu bạn muốn chắc chắn
+            this.action = window.location.pathname + `?page=1&min_price=${minPrice}&max_price=${maxPrice}`;
+        }
+>>>>>>> ke
     });
 </script>
 <!-- CSS -->

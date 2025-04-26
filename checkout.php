@@ -32,9 +32,11 @@ if (isset($_POST['checkout'])) {
 
     // Lưu thông tin đơn hàng
     $order_date = date("Y-m-d H:i:s");
-    $order_query = "INSERT INTO orders (customer_id, order_date, status) VALUES (?, ?, 'Pending')";
+    $order_status = strtolower('pending'); // Đảm bảo trạng thái là chữ thường trước khi truyền vào SQL
+    $order_query = "INSERT INTO orders (customer_id, order_date, status) VALUES (?, ?, ?)";
     $stmt = $conn->prepare($order_query);
-    $stmt->bind_param("is", $user_id, $order_date);
+    $stmt->bind_param("iss", $user_id, $order_date, $order_status);
+
     $stmt->execute();
     $order_id = $stmt->insert_id;
 
@@ -139,7 +141,7 @@ calculateTotalCart();
                                     </h6>
                                     <h6 style="flex: 1; text-align: right;">
                                         <?php
-                                        
+
                                         echo number_format((float)$value['product_price'] * (int)$value['product_quantity'], 3, '.', '.') . ' VND';
                                         ?>
                                     </h6>

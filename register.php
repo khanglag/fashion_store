@@ -40,6 +40,11 @@ if (isset($_POST['register'])) {
 
     if ($stmt->execute()) {
         $user_id = $stmt->insert_id;
+        
+        session_unset();
+        session_destroy();
+
+       
         $_SESSION['user_id'] = $user_id;
         $_SESSION['user_name'] = $username;
         $_SESSION['user_email'] = $email;

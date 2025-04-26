@@ -11,21 +11,27 @@ if (isset($_GET['logout'])) {
     }
 }
 
-
-
 if (isset($_SESSION['logged_in'])) {
     $user_id = $_SESSION['user_id'];
 
-
-    $stmt = $conn->prepare('SELECT * FROM orders JOIN order_items ON orders.order_id = order_items.order_id WHERE orders.user_id = ?');
+    // Truy vấn để lấy tất cả đơn hàng của người dùng
+    $stmt = $conn->prepare('SELECT * FROM orders 
+                            JOIN order_items ON orders.order_id = order_items.order_id 
+                            WHERE orders.user_id = ?');
     $stmt->bind_param('i', $user_id);
     $stmt->execute();
     $orders = $stmt->get_result();
 
-    // Check if there are any results
+    // Kiểm tra nếu không có đơn hàng
     if (!$orders) {
         echo "No orders found.";
         exit();
+    }
+
+    // Nhóm các đơn hàng theo order_id
+    $ordersData = [];
+    while ($row = $orders->fetch_assoc()) {
+        $ordersData[$row['order_id']][] = $row;
     }
 } else {
     echo "You are not logged in.";
@@ -47,8 +53,7 @@ if (isset($_SESSION['logged_in'])) {
                 <li class="breadcrumb-item active" aria-current="page">My Orders</li>
             </ol>
         </nav>
-        
-  
+
         <!-- Thanh Menu -->
         <div class="d-flex justify-content-center mb-5">
             <ul class="nav nav-pills">
@@ -86,39 +91,45 @@ if (isset($_SESSION['logged_in'])) {
                 </thead>
                 <tbody>
                     <!-- Display orders -->
-                    <?php while ($row = $orders->fetch_assoc()) { ?>
+                    <?php foreach ($ordersData as $orderItems) {
+                        $firstItem = $orderItems[0]; // Lấy thông tin của đơn hàng đầu tiên
+                    ?>
                         <tr class="text-uppercase font-weight">
-                            <td><?php echo $row['order_id']; ?></td>
-                            <td><?php echo number_format( $row['order_cost'], 3, '.', '.') . ' VND'; ?></td>
-                            <td><?php echo $row['product_quantity']; ?></td>
+                            <td><?php echo $firstItem['order_id']; ?></td>
+                            <td><?php echo number_format($firstItem['order_cost'], 3, '.', '.') . ' VND'; ?></td>
+                            <td><?php echo array_sum(array_column($orderItems, 'product_quantity')); ?></td>
                             <td>
                                 <?php
-                                    $status = $row['order_status'];
-                                    $statusClass = '';
+                                $status = strtolower($firstItem['order_status']); // Đảm bảo giá trị trong cơ sở dữ liệu là chữ thường
+                                $statusClass = '';
 
-                                        switch ($row['order_status']) {
-                                            case 'pending':
-                                                $statusClass = 'bg-warning'; 
-                                                break;
-                                            case 'confirmed':
-                                                $statusClass = 'bg-info'; 
-                                                break;
-                                            case 'delivered':
-                                                $statusClass = 'bg-success';
-                                                break;
-                                            case 'cancelled':
-                                                $statusClass = 'bg-danger'; 
-                                                break;
-                                        }
+                                switch ($status) {
+                                    case 'pending':
+                                        $statusClass = 'bg-warning';
+                                        break;
+                                    case 'confirmed':
+                                        $statusClass = 'bg-info';
+                                        break;
+                                    case 'delivered':
+                                        $statusClass = 'bg-success';
+                                        break;
+                                    case 'cancelled':
+                                        $statusClass = 'bg-danger';
+                                        break;
+                                    default:
+                                        $statusClass = 'bg-secondary'; // Lớp mặc định nếu không khớp trạng thái
+                                        break;
+                                }
                                 ?>
                                 <span class="badge <?php echo $statusClass; ?> p-2 text-uppercase">
-                                    <?php echo htmlspecialchars($status); ?>
+                                    <?php echo htmlspecialchars($firstItem['order_status']); ?>
                                 </span>
                             </td>
-                            <td><?php echo $row['order_date']; ?></td>
+
+                            <td><?php echo $firstItem['order_date']; ?></td>
                             <td>
                                 <form action="order_details.php" method="POST">
-                                    <input type="hidden" name="order_id" value="<?php echo $row['order_id']; ?>">
+                                    <input type="hidden" name="order_id" value="<?php echo $firstItem['order_id']; ?>">
                                     <input type="submit" name="order_details" class="btn custom-badge" value="Details">
                                 </form>
                             </td>
@@ -131,6 +142,3 @@ if (isset($_SESSION['logged_in'])) {
 </section>
 
 <?php include('layouts/footer.php') ?>
-
-
-
