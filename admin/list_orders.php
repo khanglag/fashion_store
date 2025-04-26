@@ -173,18 +173,18 @@ $total_pages = ceil($total_orders / $limit);
                                         $status = $order['order_status'];
                                         $statusClass = '';
 
-                                        switch ($order['order_status']) {
-                                            case 'pending':
-                                                $statusClass = 'bg-warning'; 
+                                        switch (true) {
+                                            case strcasecmp($status, 'pending') == 0:
+                                                $statusClass = 'bg-warning';
                                                 break;
-                                            case 'confirmed':
-                                                $statusClass = 'bg-info'; 
+                                            case strcasecmp($status, 'confirmed') == 0:
+                                                $statusClass = 'bg-info';
                                                 break;
-                                            case 'delivered':
+                                            case strcasecmp($status, 'delivered') == 0:
                                                 $statusClass = 'bg-success';
                                                 break;
-                                            case 'cancelled':
-                                                $statusClass = 'bg-danger'; 
+                                            case strcasecmp($status, 'cancelled') == 0:
+                                                $statusClass = 'bg-danger';
                                                 break;
                                         }
                                         ?>
