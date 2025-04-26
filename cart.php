@@ -28,7 +28,8 @@ if (isset($_POST['add_to_cart'])) {
             'product_quantity' => (int)$_POST['product_quantity']
         );
 
-        $_SESSION['cart'][$_POST['product_id']] = $product_array;
+        $key = $_POST['product_id'] . '_' . $_POST['product_size'];
+        $_SESSION['cart'][$key] = $product_array;
         calculateTotalCart();
 
         header("Location: login.php");
@@ -41,17 +42,20 @@ if (isset($_POST['add_to_cart'])) {
     }
 
     $product_id = (int)$_POST['product_id'];
+    $product_size = $_POST['product_size'];
+    $key = $product_id . '_' . $product_size;
 
-    if (!array_key_exists($product_id, $_SESSION['cart'])) {
+    // Kiểm tra xem sản phẩm đã có trong giỏ chưa
+    if (!array_key_exists($key, $_SESSION['cart'])) {
         $product_array = array(
             'product_id' => $product_id,
             'product_name' => htmlspecialchars($_POST['product_name']),
-            'product_size' => $_POST['product_size'],
+            'product_size' => $product_size,
             'product_image' => htmlspecialchars($_POST['product_image']),
             'product_price' => (float)$_POST['product_price'],
             'product_quantity' => (int)$_POST['product_quantity']
         );
-        $_SESSION['cart'][$product_id] = $product_array;
+        $_SESSION['cart'][$key] = $product_array;
     } else {
         echo '<script>alert("Product already added to cart");</script>';
     }
@@ -62,10 +66,12 @@ if (isset($_POST['add_to_cart'])) {
 // Cập nhật số lượng
 if (isset($_POST['update_quantity'])) {
     $product_id = (int)$_POST['product_id'];
+    $product_size = $_POST['product_size'];
+    $key = $product_id . '_' . $product_size;
     $product_quantity = (int)$_POST['product_quantity'];
 
-    if ($product_quantity > 0 && isset($_SESSION['cart'][$product_id])) {
-        $_SESSION['cart'][$product_id]['product_quantity'] = $product_quantity;
+    if ($product_quantity > 0 && isset($_SESSION['cart'][$key])) {
+        $_SESSION['cart'][$key]['product_quantity'] = $product_quantity;
     }
     calculateTotalCart();
 }
@@ -73,7 +79,9 @@ if (isset($_POST['update_quantity'])) {
 // Xoá sản phẩm
 if (isset($_POST['remove_product'])) {
     $product_id = (int)$_POST['product_id'];
-    unset($_SESSION['cart'][$product_id]);
+    $product_size = $_POST['product_size'];
+    $key = $product_id . '_' . $product_size;
+    unset($_SESSION['cart'][$key]);
     calculateTotalCart();
 }
 ?>
@@ -128,6 +136,7 @@ if (isset($_POST['remove_product'])) {
                     <td>
                         <form action="cart.php" method="POST">
                             <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                            <input type="hidden" name="product_size" value="<?php echo $item['product_size']; ?>">
                             <input type="number" name="product_quantity" value="<?php echo $item['product_quantity']; ?>" min="1">
                             <button type="submit" name="update_quantity" class="remove-btn rounded-2">Update</button>
                         </form>
@@ -138,6 +147,7 @@ if (isset($_POST['remove_product'])) {
                     <td>
                         <form action="cart.php" method="POST">
                             <input type="hidden" name="product_id" value="<?php echo $item['product_id']; ?>">
+                            <input type="hidden" name="product_size" value="<?php echo $item['product_size']; ?>">
                             <button type="submit" name="remove_product" class="remove-btn rounded-2">Remove</button>
                         </form>
                     </td>
@@ -159,7 +169,7 @@ if (isset($_POST['remove_product'])) {
     <?php if (!empty($_SESSION['cart'])): ?>
         <div class="cart-total" style="font-weight: bold;">
             <table>
-                <tr >
+                <tr>
                     <td>Total</td>
                     <td><?php echo number_format((float)$_SESSION['total'], 3, '.', '.') . ' VND'; ?></td>
                 </tr>

@@ -1,12 +1,17 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (isset($_GET['logout'])) {
     if (isset($_SESSION['logged_in'])) {
-        unset($_SESSION['logged_in']);
         session_destroy();
         header('location:login.php');
+        exit();
     }
 }
 ?>
+
 
 
 <!DOCTYPE html>
@@ -337,7 +342,7 @@ if (isset($_GET['logout'])) {
 
 
 
-                <a class="nav-link menu-link" href="abouts.php">ABOUTS</a>
+                <a class="nav-link menu-link" href="about.php">ABOUTS</a>
 
                 <form class="d-flex ms-3" action="search.php" method="GET">
                     <input class="form-control me-2" type="search" name="query" placeholder="Search Products"
@@ -374,19 +379,12 @@ if (isset($_GET['logout'])) {
                                 <a class="dropdown-item" href="account.php?logout=1">
                                     <i class="fas fa-sign-out-alt"></i> Logout
                                 </a>
-
-
-                                <!-- <a href="account.php?logout=1" class="nav-link font-weight-bold" role="tab">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a> -->
                             </li>
                         </ul>
-
                     </div>
                 <?php } else { ?>
                     <a href="login.php" class="nav-link menu-link"><i class="fas fa-user"></i> </a>
                 <?php } ?>
-
 
 
 
@@ -453,7 +451,7 @@ if (isset($_GET['logout'])) {
                             </div>
                         </td>
                         <td><?php echo $value['product_quantity']; ?></td>
-                        <td><?php echo number_format( $value['product_price'], 3, '.', '.') . 'VND'; ?></td>
+                        <td><?php echo number_format($value['product_price'], 3, '.', '.') . 'VND'; ?></td>
                         <td>
                             <?php
                             $line_total = (float)$value['product_price'] * (int)$value['product_quantity'];

@@ -116,7 +116,7 @@ if (isset($_POST['order_id'])) {
                                                 <b>Email: </b> <?php echo htmlspecialchars($order['user_email']); ?>
                                             </address>
                                         </div>
-                                        <div class="col-sm-4 invoice-col" ">
+                                        <div class="col-sm-4 invoice-col">
                                             <br>
                                             <b>Order ID:</b> <?php echo htmlspecialchars($order['order_id']); ?><br>
                                             <b>Total:</b> <?php echo number_format($order['order_cost'], 3, '.', '.'); ?> VND<br>
