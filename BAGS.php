@@ -45,7 +45,6 @@ if (isset($_POST['search'])) {
         $stmt->execute();
         $products = $stmt->get_result();
         $stmt->close();
-
     } else {
         // Tìm kiếm theo nhóm BAGS (nhiều danh mục)
         $stmt = $conn->prepare("
@@ -77,7 +76,6 @@ if (isset($_POST['search'])) {
         $products = $stmt->get_result();
         $stmt->close();
     }
-
 } else {
     // Không tìm kiếm, hiển thị toàn bộ nhóm BAGS
     $stmt = $conn->prepare("
@@ -132,6 +130,12 @@ $total_pages = ceil($total_products / $products_per_page);
                 <form id="searchForm" action="BAGS.php" method="POST">
                     <div class="row mx-auto container">
                         <div class="col-lg-12">
+                            <!-- Search by Name -->
+                            <div class="col-lg-12 mb-3">
+                                <p class="text-uppercase fw-bold">Product Name</p>
+                                <input style="width: 220px; height: 40px; font-size: 14px" type="text" name="keyword" class="form-control" placeholder="Enter product name..." value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+                            </div>
+
                             <p class="text-uppercase fw-bold">Category</p>
                             <div class="form-check">
                                 <input type="radio" value="MINI BAGS" class="form-check-input" name="category" id="category_one" <?= $category == 'MINI BAGS' ? 'checked' : '' ?>>
@@ -146,9 +150,15 @@ $total_pages = ceil($total_products / $products_per_page);
                         <div class="col-lg-12 mt-3">
                             <p class="text-uppercase fw-bold">Price Range</p>
                             <div class="d-flex align-items-center" style="gap: 8px;">
-                                <input type="number" name="min_price" id="minPriceInput" value="<?= $min_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+                                <input type="text" id="minPriceDisplay" class="form-control text-center"
+                                    style="width: 90px; height: 32px; padding: 4px 8px; font-size: 14px" value="0">
+                                <input type="hidden" name="min_price" id="minPriceInput" value="<?= $min_price ?>">
+
                                 <span class="mx-2 fw-bold">-</span>
-                                <input type="number" name="max_price" id="maxPriceInput" value="<?= $max_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+
+                                <input type="text" id="maxPriceDisplay" class="form-control text-center"
+                                    style="width: 90px; height: 32px; padding: 4px 8px; font-size: 14px" value="0">
+                                <input type="hidden" name="max_price" id="maxPriceInput" value="<?= $max_price ?>">
                             </div>
                             <p class="text-uppercase fw-bold">Price: <span id="selectedPrice"><?= $min_price ?> - <?= $max_price ?></span> VND</p>
                         </div>
@@ -171,7 +181,7 @@ $total_pages = ceil($total_products / $products_per_page);
                 </div>
                 <div class="row">
                     <?php if ($products && $products->num_rows > 0): ?>
-                        <?php while ($row = $products->fetch_assoc()): 
+                        <?php while ($row = $products->fetch_assoc()):
                             $status = strtolower(str_replace(' ', '-', $row['status_products_name']));
                             $link = "single_product.php?product_id={$row['product_id']}";
                             if ($row['status_products_name'] == 'Sold Out') {
@@ -180,28 +190,28 @@ $total_pages = ceil($total_products / $products_per_page);
                                 $link = "pre_order.php?product_id={$row['product_id']}";
                             }
                         ?>
-                        <div class="product text-center col-lg-3 col-md-6 col-sm-12">
-                            <a href="<?= $link ?>" class="product-link">
-                                <div class="img-container">
-                                    <div class="product-status <?= $status ?>">
-                                        <?= $row['status_products_name'] ?>
+                            <div class="product text-center col-lg-3 col-md-6 col-sm-12">
+                                <a href="<?= $link ?>" class="product-link">
+                                    <div class="img-container">
+                                        <div class="product-status <?= $status ?>">
+                                            <?= $row['status_products_name'] ?>
+                                        </div>
+                                        <img class="img-fluid mb-3" src="./assets/images/<?= $row['product_image'] ?>" alt="">
+                                        <img class="img-fluid img-second" src="./assets/images/<?= $row['product_image2'] ?>" alt="">
                                     </div>
-                                    <img class="img-fluid mb-3" src="./assets/images/<?= $row['product_image'] ?>" alt="">
-                                    <img class="img-fluid img-second" src="./assets/images/<?= $row['product_image2'] ?>" alt="">
-                                </div>
-                                <div class="star">
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i><i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <h3 class="p-product"><?= $row['product_name'] ?></h3>
-                                <p class="p-price"><?= number_format($row['product_price'], 0, '.', '.') ?> VND</p>
-                                <p class="p-price-discount">
-                                    <?= $row['product_price_discount'] > 0 ? number_format($row['product_price_discount'], 0, '.', '.') . ' VND' : '' ?>
-                                </p>
-                            </a>
-                        </div>
-                        
+                                    <div class="star">
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i><i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <h3 class="p-product"><?= $row['product_name'] ?></h3>
+                                    <p class="p-price"><?= number_format($row['product_price'], 0, '.', '.') ?> VND</p>
+                                    <p class="p-price-discount">
+                                        <?= $row['product_price_discount'] > 0 ? number_format($row['product_price_discount'], 0, '.', '.') . ' VND' : '' ?>
+                                    </p>
+                                </a>
+                            </div>
+
                         <?php endwhile; ?>
                     <?php else: ?>
                         <p class="text-center">No products found.</p>
@@ -268,8 +278,46 @@ $total_pages = ceil($total_products / $products_per_page);
         }
     });
 </script>
-<!-- CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" rel="stylesheet" />
+<script>
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
 
-<!-- JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    function unformatNumber(str) {
+        return str.replace(/,/g, '');
+    }
+
+    function bindPriceInput(displayId, hiddenId, defaultValue) {
+        const display = document.getElementById(displayId);
+        const hidden = document.getElementById(hiddenId);
+
+        if (defaultValue && defaultValue !== "0") {
+            display.value = formatNumber(defaultValue);
+        }
+
+        display.addEventListener('focus', () => {
+            if (display.value === "0") display.value = "";
+        });
+
+        display.addEventListener('blur', () => {
+            if (display.value === "") {
+                display.value = "0";
+                hidden.value = "0";
+            }
+        });
+
+        display.addEventListener('input', () => {
+            let raw = unformatNumber(display.value);
+            if (!/^\d*$/.test(raw)) {
+                raw = raw.replace(/\D/g, '');
+            }
+            hidden.value = raw;
+            display.value = formatNumber(raw);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        bindPriceInput('minPriceDisplay', 'minPriceInput', "<?= $min_price ?>");
+        bindPriceInput('maxPriceDisplay', 'maxPriceInput', "<?= $max_price ?>");
+    });
+</script>
