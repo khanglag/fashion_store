@@ -115,6 +115,12 @@ $total_pages = ceil($total_products / $products_per_page);
                 <form id="searchForm" action="SWEATERS & CARDIGANS.php" method="POST">
                     <div class="row mx-auto container">
                         <div class="row">
+                            <!-- Search by Name -->
+                            <div class="col-lg-12 mb-3">
+                                <p class="text-uppercase fw-bold">Product Name</p>
+                                <input style="width: 220px; height: 40px; font-size: 14px" type="text" name="keyword" class="form-control" placeholder="Enter product name..." value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+                            </div>
+
                             <!-- Category Section -->
                             <div class="col-lg-12">
                                 <p class="text-uppercase fw-bold">Category</p>
@@ -150,9 +156,15 @@ $total_pages = ceil($total_products / $products_per_page);
                             <div class="col-lg-12 mt-3">
                                 <p class="text-uppercase fw-bold">Price Range</p>
                                 <div class="d-flex align-items-center" style="gap: 8px;">
-                                    <input type="number" name="min_price" id="minPriceInput" value="<?= $min_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+                                    <input type="text" id="minPriceDisplay" class="form-control text-center"
+                                        style="width: 90px; height: 32px; padding: 4px 8px; font-size: 14px" value="0">
+                                    <input type="hidden" name="min_price" id="minPriceInput" value="<?= $min_price ?>">
+
                                     <span class="mx-2 fw-bold">-</span>
-                                    <input type="number" name="max_price" id="maxPriceInput" value="<?= $max_price ?>" class="form-control text-center" style="width: 90px;" min="1" max="10000000">
+
+                                    <input type="text" id="maxPriceDisplay" class="form-control text-center"
+                                        style="width: 90px; height: 32px; padding: 4px 8px; font-size: 14px" value="0">
+                                    <input type="hidden" name="max_price" id="maxPriceInput" value="<?= $max_price ?>">
                                 </div>
                                 <p class="text-uppercase fw-bold">Price: <span id="selectedPrice"><?= $min_price ?> - <?= $max_price ?></span> VND</p>
                             </div>
@@ -284,8 +296,46 @@ $total_pages = ceil($total_products / $products_per_page);
         }
     });
 </script>
-<!-- CSS -->
-<link href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.css" rel="stylesheet" />
+<script>
+    function formatNumber(num) {
+        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
 
-<!-- JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.0/nouislider.min.js"></script>
+    function unformatNumber(str) {
+        return str.replace(/,/g, '');
+    }
+
+    function bindPriceInput(displayId, hiddenId, defaultValue) {
+        const display = document.getElementById(displayId);
+        const hidden = document.getElementById(hiddenId);
+
+        if (defaultValue && defaultValue !== "0") {
+            display.value = formatNumber(defaultValue);
+        }
+
+        display.addEventListener('focus', () => {
+            if (display.value === "0") display.value = "";
+        });
+
+        display.addEventListener('blur', () => {
+            if (display.value === "") {
+                display.value = "0";
+                hidden.value = "0";
+            }
+        });
+
+        display.addEventListener('input', () => {
+            let raw = unformatNumber(display.value);
+            if (!/^\d*$/.test(raw)) {
+                raw = raw.replace(/\D/g, '');
+            }
+            hidden.value = raw;
+            display.value = formatNumber(raw);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        bindPriceInput('minPriceDisplay', 'minPriceInput', "<?= $min_price ?>");
+        bindPriceInput('maxPriceDisplay', 'maxPriceInput', "<?= $max_price ?>");
+    });
+</script>
