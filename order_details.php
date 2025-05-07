@@ -97,7 +97,7 @@ if (isset($_POST['order_details']) && isset($_POST['order_id'])) {
                                         echo 'XL';
                                         break;
                                     default:
-                                        echo 'Pre Size';
+                                        echo 'Free Size';
                                         break;}?>   
                             </td>
                             <td>

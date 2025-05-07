@@ -229,6 +229,8 @@ $products = $stmt->get_result();
 
 
 <?php include('layouts/footer.php') ?>
+
+
 <script>
     function updatePrice() {
         var minPrice = document.getElementById('minPriceInput').value;

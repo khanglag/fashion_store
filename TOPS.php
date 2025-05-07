@@ -90,6 +90,7 @@ if (isset($_POST['search'])) {
     $products = $stmt->get_result();
 }
 
+$total_pages = ceil($total_products / $products_per_page);
 // Truy vấn lấy sản phẩm thuộc các category_id = 1, 6, 7, 8, 9, 10 và trạng thái sản phẩm từ cơ sở dữ liệu
 ?>
 

@@ -19,15 +19,16 @@ if ($status_filter) {
 
 if ($start_date && $end_date) {
     $where_conditions[] = "orders.order_date BETWEEN ? AND ?";
-    $bindings[] = $start_date;
-    $bindings[] = $end_date;
+    $bindings[] = $start_date . ' 00:00:00';
+    $bindings[] = $end_date . ' 23:59:59';
 } elseif ($start_date) {
     $where_conditions[] = "orders.order_date >= ?";
-    $bindings[] = $start_date;
+    $bindings[] = $start_date . ' 00:00:00';
 } elseif ($end_date) {
     $where_conditions[] = "orders.order_date <= ?";
-    $bindings[] = $end_date;
+    $bindings[] = $end_date . ' 23:59:59';
 }
+
 
 if ($user_address) {
     $where_conditions[] = "orders.user_address LIKE ?";
