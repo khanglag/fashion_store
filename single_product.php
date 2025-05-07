@@ -86,6 +86,20 @@ input[type="radio"] {
     display: none; /* Ẩn nút radio gốc */
 }
 
+.product-category {
+    margin-top: 20px;
+}
+
+.category-name {
+    background-color: #28a745; /* Màu xanh lá */
+    color: white; /* Màu chữ trắng */
+    padding: 8px 20px;
+    border-radius: 20px; /* Bo tròn các góc */
+    font-size: 16px;
+    font-weight: bold;
+    text-transform: capitalize;
+}
+
 </style>
 
 
@@ -119,8 +133,12 @@ input[type="radio"] {
             </div>
 
             <div class="col-sm-12 col-md-6 col-lg-6">
-                
+                <p class="product-category">
+                    <span class="category-name"><?php echo $row['category_name']; ?></span>
+                </p>
+
                 <h2 class="py-4"><?php echo $row['product_name']; ?></h2>
+                
                 <h4><?php  echo number_format($row['product_price'], 0, '.', '.') . ' VND';?></h4>
                 
                 <h3 class="p-price-discount">

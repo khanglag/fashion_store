@@ -86,6 +86,7 @@ if (isset($_SESSION['logged_in'])) {
                         <th>Quantity</th>
                         <th>Order Status</th>
                         <th>Order Date</th>
+                        <th>Recipient Address</th>
                         <th>Order Details</th>
                     </tr>
                 </thead>
@@ -125,8 +126,9 @@ if (isset($_SESSION['logged_in'])) {
                                     <?php echo htmlspecialchars($firstItem['order_status']); ?>
                                 </span>
                             </td>
-
+                            
                             <td><?php echo $firstItem['order_date']; ?></td>
+                            <td><?php echo $firstItem['user_address']; ?></td>
                             <td>
                                 <form action="order_details.php" method="POST">
                                     <input type="hidden" name="order_id" value="<?php echo $firstItem['order_id']; ?>">
