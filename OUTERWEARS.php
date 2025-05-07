@@ -120,7 +120,14 @@ $total_pages = ceil($total_products / $products_per_page);
                             <!-- Search by Name -->
                             <div class="col-lg-12 mb-3">
                                 <p class="text-uppercase fw-bold">Product Name</p>
-                                <input style="width: 220px; height: 40px; font-size: 14px" type="text" name="keyword" class="form-control" placeholder="Enter product name..." value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+                                <input style="width: 220px; height: 40px; font-size: 14px"
+                                    type="text"
+                                    name="keyword"
+                                    id="keywordInput"
+                                    class="form-control"
+                                    placeholder="Enter product name..."
+                                    value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+
                             </div>
                             <!-- Category Section -->
                             <div class="col-lg-12">
@@ -188,7 +195,7 @@ $total_pages = ceil($total_products / $products_per_page);
                     <h3 class="text-uppercase fs-3">OUTERWEARS</h3>
                     <hr class="mx-auto">
                 </div>
-                <div class="row">
+                <div class="row" id="product-container">
                     <!-- Products Section -->
                     <?php while ($row = $products->fetch_assoc()) {
                         // Kiểm tra trạng thái sản phẩm, nếu sản phẩm đã "Sold Out", "Pre Order"
@@ -338,5 +345,31 @@ $total_pages = ceil($total_products / $products_per_page);
     document.addEventListener('DOMContentLoaded', () => {
         bindPriceInput('minPriceDisplay', 'minPriceInput', "<?= $min_price ?>");
         bindPriceInput('maxPriceDisplay', 'maxPriceInput', "<?= $max_price ?>");
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Mảng category_ids
+        var category_ids = [10];
+        const min_price = document.getElementById('minPriceInput').value;
+        const max_price = document.getElementById('maxPriceInput').value;
+
+        $('#keywordInput, #minPrice, #maxPrice').on('change keyup', function() {
+            var keyword = $('#keywordInput').val();
+            $.ajax({
+                url: 'search_products.php',
+                method: 'POST',
+                data: {
+                    keyword: keyword,
+                    min_price: min_price,
+                    max_price: max_price,
+                    category_ids: JSON.stringify(category_ids) // Chuyển mảng thành chuỗi JSON
+                },
+                success: function(response) {
+                    $('#product-container').html(response);
+                }
+            });
+        });
     });
 </script>

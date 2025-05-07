@@ -378,12 +378,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $(document).ready(function() {
         // Mảng category_ids
         var category_ids = [1, 6, 7, 8, 9, 10];
+        const min_price = document.getElementById('minPriceInput').value;
+        const max_price = document.getElementById('maxPriceInput').value;
 
         $('#keywordInput, #minPrice, #maxPrice').on('change keyup', function() {
             var keyword = $('#keywordInput').val();
-            var min_price = $('#minPrice').val();
-            var max_price = $('#maxPrice').val();
-
             $.ajax({
                 url: 'search_products.php',
                 method: 'POST',
