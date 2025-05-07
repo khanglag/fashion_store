@@ -150,7 +150,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             <!-- Search by Name -->
                             <div class="col-lg-12 mb-3">
                                 <p class="text-uppercase fw-bold">Product Name</p>
-                                <input style="width: 220px; height: 40px; font-size: 14px" type="text" name="keyword" class="form-control" placeholder="Enter product name..." value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+                                <input style="width: 220px; height: 40px; font-size: 14px"
+                                    type="text"
+                                    name="keyword"
+                                    id="keywordInput"
+                                    class="form-control"
+                                    placeholder="Enter product name..."
+                                    value="<?= isset($_POST['keyword']) ? htmlspecialchars($_POST['keyword']) : '' ?>">
+
                             </div>
 
                             <!-- Category Section -->
@@ -213,7 +220,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     <h3 class="text-uppercase fs-3">TOPS</h3>
                     <hr class="mx-auto">
                 </div>
-                <div class="row">
+                <div class="row" id="product-container">
                     <!-- Products Section -->
                     <?php while ($row = $products->fetch_assoc()) {
                         // Kiểm tra trạng thái sản phẩm, nếu sản phẩm đã "Sold Out", "Pre Order"
@@ -364,5 +371,32 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     document.addEventListener('DOMContentLoaded', () => {
         bindPriceInput('minPriceDisplay', 'minPriceInput', "<?= $min_price ?>");
         bindPriceInput('maxPriceDisplay', 'maxPriceInput', "<?= $max_price ?>");
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Mảng category_ids
+        var category_ids = [1, 6, 7, 8, 9, 10];
+
+        $('#keywordInput, #minPrice, #maxPrice').on('change keyup', function() {
+            var keyword = $('#keywordInput').val();
+            var min_price = $('#minPrice').val();
+            var max_price = $('#maxPrice').val();
+
+            $.ajax({
+                url: 'search_products.php',
+                method: 'POST',
+                data: {
+                    keyword: keyword,
+                    min_price: min_price,
+                    max_price: max_price,
+                    category_ids: JSON.stringify(category_ids) // Chuyển mảng thành chuỗi JSON
+                },
+                success: function(response) {
+                    $('#product-container').html(response);
+                }
+            });
+        });
     });
 </script>
