@@ -92,25 +92,7 @@ if (isset($_POST['search'])) {
 $total_pages = ceil($total_products / $products_per_page);
 ?>
 
-<?php
-// Kiểm tra xem form có được submit hay không
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    // Kiểm tra xem danh mục nào đã được chọn
-    if (isset($_POST['category'])) {
-        $category = $_POST['category'];
 
-        // Chuyển hướng dựa trên giá trị danh mục đã chọn
-        switch ($category) {
-            case 'ACCESSORIES':
-                header('Location: ACCESSORIES.php');
-                exit();
-
-            default:
-                break;
-        }
-    }
-}
-?>
 
 <?php include('layouts/header.php') ?>
 
