@@ -161,7 +161,7 @@ $total_pages = ceil($total_products / $products_per_page);
                                         style="width: 90px; height: 32px; padding: 4px 8px; font-size: 14px" value="0">
                                     <input type="hidden" name="max_price" id="maxPriceInput" value="<?= $max_price ?>">
                                 </div>
-                                <p class="text-uppercase fw-bold">Price: <span id="selectedPrice"><?= $min_price ?> - <?= $max_price ?></span> VND</p>
+                                
                             </div>
 
                         </div>
