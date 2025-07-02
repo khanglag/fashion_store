@@ -22,7 +22,7 @@ if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
         SELECT users.user_id, users.user_name, users.full_name, users.user_email, SUM(orders.order_cost) AS total_spent
         FROM orders
         JOIN users ON users.user_id = orders.user_id
-        WHERE orders.order_date BETWEEN '$from' AND '$to'
+        WHERE orders.order_date BETWEEN '$from' AND '$to' AND orders.order_status='delivered'
         GROUP BY users.user_id
         ORDER BY total_spent DESC
         LIMIT 5
@@ -37,8 +37,122 @@ if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
         $orderQuery = "
             SELECT order_id, order_cost, order_date 
             FROM orders 
-            WHERE user_id = $userId
+            WHERE user_id = $userId AND orders.order_status='delivered'
             AND order_date BETWEEN '$from' AND '$to'
+            ORDER BY order_date DESC
+        ";
+
+        $orderResult = mysqli_query($conn, $orderQuery);
+        $orderList = [];
+        while ($order = mysqli_fetch_assoc($orderResult)) {
+            $orderList[] = $order;
+        }
+
+        $row['orders'] = $orderList;
+        $topCustomers[] = $row;
+    }
+}elseif (!empty($_GET['from_date']) && empty($_GET['to_date'])) {
+    $from = $_GET['from_date'];
+    $to_old = date('Y-m-d');
+
+    $to = date("Y-m-d", strtotime($to_old . ' +1 day'));
+    
+    // Truy vấn 5 khách hàng có tổng đơn hàng lớn nhất
+    $query = "
+        SELECT users.user_id, users.user_name, users.full_name, users.user_email, SUM(orders.order_cost) AS total_spent
+        FROM orders
+        JOIN users ON users.user_id = orders.user_id
+        WHERE orders.order_date BETWEEN '$from' AND '$to' AND orders.order_status='delivered'
+        GROUP BY users.user_id
+        ORDER BY total_spent DESC
+        LIMIT 5
+    ";
+
+    $result = mysqli_query($conn, $query);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $userId = $row['user_id'];
+
+        // Lấy danh sách đơn hàng của từng khách hàng
+        $orderQuery = "
+            SELECT order_id, order_cost, order_date 
+            FROM orders 
+            WHERE user_id = $userId AND orders.order_status='delivered'
+            AND orders.order_date BETWEEN '$from' AND '$to'
+            ORDER BY order_date DESC
+        ";
+
+        $orderResult = mysqli_query($conn, $orderQuery);
+        $orderList = [];
+        while ($order = mysqli_fetch_assoc($orderResult)) {
+            $orderList[] = $order;
+        }
+
+        $row['orders'] = $orderList;
+        $topCustomers[] = $row;
+    }
+}elseif (empty($_GET['from_date']) && !empty($_GET['to_date'])) {
+    $to_old = $_GET['to_date'];
+
+    $to = date("Y-m-d", strtotime($to_old . ' +1 day'));
+
+    // Truy vấn 5 khách hàng có tổng đơn hàng lớn nhất
+    $query = "
+        SELECT users.user_id, users.user_name, users.full_name, users.user_email, SUM(orders.order_cost) AS total_spent
+        FROM orders
+        JOIN users ON users.user_id = orders.user_id
+        WHERE orders.order_date <= '$to' AND orders.order_status='delivered'
+        GROUP BY users.user_id
+        ORDER BY total_spent DESC
+        LIMIT 5
+    ";
+
+    $result = mysqli_query($conn, $query);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $userId = $row['user_id'];
+
+        // Lấy danh sách đơn hàng của từng khách hàng
+        $orderQuery = "
+            SELECT order_id, order_cost, order_date 
+            FROM orders 
+            WHERE user_id = $userId AND orders.order_status='delivered'
+            AND order_date <= '$to'
+            ORDER BY order_date DESC
+        ";
+
+        $orderResult = mysqli_query($conn, $orderQuery);
+        $orderList = [];
+        while ($order = mysqli_fetch_assoc($orderResult)) {
+            $orderList[] = $order;
+        }
+
+        $row['orders'] = $orderList;
+        $topCustomers[] = $row;
+    }
+}else{
+
+    // Truy vấn 5 khách hàng có tổng đơn hàng lớn nhất
+    $query = "
+        SELECT users.user_id, users.user_name, users.full_name, users.user_email, SUM(orders.order_cost) AS total_spent
+        FROM orders
+        JOIN users ON users.user_id = orders.user_id
+        WHERE orders.order_status='delivered'
+        GROUP BY users.user_id
+        ORDER BY total_spent DESC
+        LIMIT 5
+    ";
+
+    $result = mysqli_query($conn, $query);
+
+    while ($row = mysqli_fetch_assoc($result)) {
+        $userId = $row['user_id'];
+
+        // Lấy danh sách đơn hàng của từng khách hàng
+        $orderQuery = "
+            SELECT order_id, order_cost, order_date 
+            FROM orders 
+            WHERE user_id = $userId AND orders.order_status='delivered'
             ORDER BY order_date DESC
         ";
 
@@ -97,8 +211,7 @@ if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php $index = 1;
-                                ?>
+                                <?php $index = 1; ?>
                                 <?php foreach ($topCustomers as $customer): ?>
                                     <tr>
                                         <td><?php echo $index++; ?></td>
@@ -120,10 +233,7 @@ if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
                                                     </li>
                                                 <?php endforeach; ?>
                                             </ul>
-
                                         </td>
-
-
                                         <td><strong><?php echo number_format($customer['total_spent'], 3, '.', '.'); ?> VND</strong></td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -137,6 +247,5 @@ if (!empty($_GET['from_date']) && !empty($_GET['to_date'])) {
         </div>
     </section>
 </div>
-
 
 <?php include('../admin/layouts/sidebar.php'); ?>

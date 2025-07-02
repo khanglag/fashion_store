@@ -32,7 +32,7 @@ if (!$resultUsers) {
 $totalCustomers = mysqli_fetch_assoc($resultUsers)['total_customers'];
 
 // Truy vấn tổng doanh thu, sử dụng cột `order_cost`
-$resultSales = mysqli_query($conn, "SELECT SUM(order_cost) as total_sales FROM orders");
+$resultSales = mysqli_query($conn, "SELECT SUM(order_cost) as total_sales FROM orders WHERE orders.order_status='delivered'");
 if (!$resultSales) {
     die('Query Error: ' . mysqli_error($conn));
 }
